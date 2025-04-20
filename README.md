@@ -1,4 +1,4 @@
-# mpc-rag-demo
+# mcp-rag-demo
 
 ## 構想
 
