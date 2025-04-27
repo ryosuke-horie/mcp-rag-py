@@ -7,8 +7,13 @@
 
 ## 開発環境セットアップ
 
-- (ここに開発環境の構築手順や必要なツールを記述)
-- 例: Python 3.10+, pip, Docker (オプション)
+- Python 3.10+ (`.venv` 仮想環境を使用)
+- `pip` を使用して `requirements.txt` に記載された依存関係をインストール済み。
+- **DuckDB と VSS 拡張:**
+    - Python バインディング: `pip install duckdb` (requirements.txt に追加済み想定)
+    - VSS 拡張: DuckDB 内から `INSTALL vss; LOAD vss;` を実行してインストール・ロード。
+- LM Studio (埋め込みモデル用、予定)
+- 例: Docker (オプション)
 
 ## 技術的制約
 
@@ -17,8 +22,8 @@
 
 ## 依存関係
 
-- (ここに主要な外部ライブラリやサービスへの依存関係を記述)
-- 例: requirements.txt 参照
+- `requirements.txt` 参照 (DuckDB を含む)
+- DuckDB VSS 拡張 (DuckDB 内部で管理)
 
 ## ツール利用パターン
 
