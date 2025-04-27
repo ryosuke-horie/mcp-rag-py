@@ -6,9 +6,9 @@
 
 ## 現状
 
--   初期のファイル (`__init__.py`, `loader.py`, `splitter.py`) が作成されました。
--   具体的なローダーやスプリッターの実装はこれから行います。
--   LangChain のドキュメントローダーとテキストスプリッターを利用する予定です。
+-   **`loader.py`**: LangChain の `DirectoryLoader` と `TextLoader` を使用して、指定ディレクトリ内の `.txt` および `.md` ファイルを読み込む `load_documents` 関数を実装済み。
+-   **`splitter.py`**: LangChain の `RecursiveCharacterTextSplitter` を使用して、ドキュメントを指定されたチャンクサイズ (デフォルト 1000) とオーバーラップ (デフォルト 200) で分割する `split_documents` 関数を実装済み。
+-   **`__init__.py`**: 上記関数を外部からインポート可能に設定済み。
 
 ## 関連コンポーネント
 

@@ -25,7 +25,11 @@
 
 ## コンポーネントの関係
 
-- (ここに主要コンポーネント間の連携方法やインターフェースを記述)
+-   **`rag_core.document_processor`**:
+    -   ドキュメントの読み込みには LangChain の `DirectoryLoader` および `TextLoader` を利用し、`.txt` と `.md` ファイルを処理する。
+    -   テキストの分割には LangChain の `RecursiveCharacterTextSplitter` を利用し、チャンクサイズ 1000、オーバーラップ 200 で分割する。
+    -   読み込み・分割されたドキュメント（チャンク）は、後続の `rag_core.embedding` コンポーネントに渡される。
+- (他のコンポーネント間の連携方法やインターフェースを記述)
 
 ## クリティカルな実装パス
 
