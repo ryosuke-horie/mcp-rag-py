@@ -2,8 +2,8 @@
 
 ## Current Work Focus
 
--   `rag_core/embedding` (Ollama API連携) の実装完了。
--   次のステップとして、`rag_core/vectordb` (DuckDB+VSS連携) の実装を開始する。
+-   `rag_core/vectordb` (DuckDB+VSS連携) の実装完了。
+-   次のステップとして、`rag_api_server` の実装を開始する。
 
 ## Recent Changes
 
@@ -17,6 +17,7 @@
 -   Python 依存関係を `.venv` 仮想環境にインストール (`requirements.txt` に基づく)。
 -   `rag_core/document_processor` の Loader (`loader.py`) と Splitter (`splitter.py`) を LangChain を利用して実装。`.txt` と `.md` ファイルに対応。
 -   `rag_core/embedding` の Model (`model.py`) を LangChain (`langchain-ollama`) を利用して実装。Ollama (`bge-m3`) と連携。
+-   `rag_core/vectordb` の Storage (`storage.py`) を DuckDB+VSS を利用して実装。
 
 ## Next Steps
 
@@ -24,6 +25,6 @@
 2.  `rag_core` コンポーネントの実装を進める。
     -   `rag_core/document_processor` (Loader, Splitter) - **完了**
     -   `rag_core/embedding` (Ollama API連携) - **完了**
-    -   `rag_core/vectordb` (DuckDB+VSS連携) - **着手**
-3.  `rag_api_server` の実装。
+    -   `rag_core/vectordb` (DuckDB+VSS連携) - **完了**
+3.  `rag_api_server` の実装。 - **着手**
 4.  `mcp_adapter` の実装。
