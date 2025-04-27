@@ -56,40 +56,47 @@ embeddings = HuggingFaceEmbeddings(
 )
 ```
 
-### 3. ベクトルデータベース選定: Chroma
+### 3. ベクトルデータベース選定: DuckDB + VSS
 
 ローカル環境で実行可能なベクトルデータベースの候補として、以下を比較検討しました：
 
 | ベクトルDB | 特徴 | ローカル実行 | Python統合 | 永続化 | フィルタリング |
 |------------|------|------------|------------|--------|--------------|
-| **Chroma** | 軽量で簡単に導入可能 | ✅ | ✅ | ✅ | ✅ |
+| **DuckDB + VSS** | 高速なクエリ処理とベクトル検索を統合 | ✅ | ✅ | ✅ | ✅ |
 | **FAISS** | 高速な類似検索 | ✅ | ✅ | 制限あり | ❌ |
 | **Qdrant** | 高機能だが複雑 | ✅ | ✅ | ✅ | ✅ |
 
-評価の結果、以下の理由からChromaを選定します：
+評価の結果、以下の理由からDuckDB + VSSを選定します：
 
-- **簡易な導入**: インメモリモードとパーシスタンスモードの両方をサポートし、セットアップが簡単
-- **LangChainとの連携**: LangChainとの統合が優れており、追加の設定なしで使用可能
-- **メタデータフィルタリング**: ドキュメントメタデータに基づいたフィルタリングをサポート
-- **十分なパフォーマンス**: 数十万エントリまでの中規模データセットに十分対応可能
+- **SQLベースの柔軟性**: 標準SQLを使用してクエリを記述可能
+- **ローカル実行の容易さ**: シンプルなセットアップ
+- **パフォーマンス**: 高速なベクトル検索と分析機能の統合
 
 **実装方法**:
 ```python
-from langchain_community.vectorstores import Chroma
+import duckdb
 
-# インメモリ型
-vectorstore = Chroma.from_documents(
-    documents=documents,
-    embedding=embeddings
-)
+# 接続とテーブル作成
+conn = duckdb.connect('vectors.duckdb')
+conn.execute('''
+CREATE TABLE IF NOT EXISTS documents (
+    id VARCHAR PRIMARY KEY,
+    content TEXT,
+    metadata JSON,
+    embedding FLOAT[]
+);
+''')
 
-# 永続化型
-vectorstore = Chroma.from_documents(
-    documents=documents,
-    embedding=embeddings,
-    persist_directory="./chroma_db",
-    collection_name="project_docs"
-)
+# 埋め込みベクトルの挿入
+for i, doc in enumerate(chunks):
+    vector = embeddings.embed_query(doc.page_content)
+    conn.execute(
+        "INSERT INTO documents VALUES (?, ?, ?, ?)",
+        [f"doc_{i}", doc.page_content, json.dumps(doc.metadata), vector]
+    )
+
+# ベクトル検索のインデックス作成
+conn.execute("CREATE INDEX vector_idx ON documents USING HNSW (embedding);")
 ```
 
 ## 実装アーキテクチャ
@@ -100,14 +107,14 @@ vectorstore = Chroma.from_documents(
 graph TB
     A[ドキュメント] --> B[ドキュメントローダー]
     B --> C[テキスト分割]
-    C --> D[埋め込み生成<br>SentenceTransformers]
-    D --> E[ベクトルDB<br>Chroma]
-    F[クエリ] --> G[埋め込み生成<br>SentenceTransformers]
+    C --> D[埋め込み生成\nSentenceTransformers]
+    D --> E[ベクトルDB\nDuckDB + VSS]
+    F[クエリ] --> G[埋め込み生成\nSentenceTransformers]
     G --> H[ベクトル検索]
     E --> H
     H --> I[関連ドキュメント取得]
     I --> J[プロンプト生成]
-    J --> K[回答生成<br>LLM]
+    J --> K[回答生成\nLLM]
     
     L[MCP] <--> M[APIサーバー]
     M <--> H
@@ -244,175 +251,6 @@ def split_documents(documents, chunk_size=1000, chunk_overlap=200):
     return split_docs
 ```
 
-### 4. 埋め込みモデルと検索
-
-```python
-# src/embeddings.py
-from langchain_community.embeddings import HuggingFaceEmbeddings
-
-def get_embeddings_model(model_name="sentence-transformers/all-MiniLM-L6-v2"):
-    """埋め込みモデルを初期化する"""
-    embeddings = HuggingFaceEmbeddings(
-        model_name=model_name,
-        model_kwargs={"device": "cpu"},
-        encode_kwargs={"normalize_embeddings": True}
-    )
-    return embeddings
-```
-
-### 5. ベクトルストア設定
-
-```python
-# src/vectorstore.py
-from langchain_community.vectorstores import Chroma
-from src.embeddings import get_embeddings_model
-
-def create_vector_store(documents, persist_directory, collection_name, embedding_model=None):
-    """ベクトルストアを作成する"""
-    if embedding_model is None:
-        embedding_model = get_embeddings_model()
-    
-    vectorstore = Chroma.from_documents(
-        documents=documents,
-        embedding=embedding_model,
-        persist_directory=persist_directory,
-        collection_name=collection_name
-    )
-    
-    # 永続化
-    vectorstore.persist()
-    
-    print(f"Created vector store with {len(documents)} documents")
-    return vectorstore
-
-def load_vector_store(persist_directory, collection_name, embedding_model=None):
-    """既存のベクトルストアをロードする"""
-    if embedding_model is None:
-        embedding_model = get_embeddings_model()
-    
-    vectorstore = Chroma(
-        persist_directory=persist_directory,
-        embedding_function=embedding_model,
-        collection_name=collection_name
-    )
-    
-    return vectorstore
-```
-
-### 6. RAG処理モジュール
-
-```python
-# src/rag/processor.py
-from langchain.prompts import ChatPromptTemplate
-from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
-
-def create_retrieval_chain(vectorstore, llm, k=4):
-    """検索チェーンを作成する"""
-    # 検索コンポーネント
-    retriever = vectorstore.as_retriever(search_kwargs={"k": k})
-    
-    # プロンプトテンプレート
-    template = """次の質問に対して、以下のコンテキスト情報を使用して回答してください。
-    回答に自信がない場合は「わかりません」と述べてください。
-    
-    コンテキスト:
-    {context}
-    
-    質問: {question}
-    
-    回答:"""
-    
-    prompt = ChatPromptTemplate.from_template(template)
-    
-    # RAGチェーン
-    def format_docs(docs):
-        return "\n\n".join([d.page_content for d in docs])
-    
-    rag_chain = (
-        {"context": retriever | format_docs, "question": RunnablePassthrough()}
-        | prompt
-        | llm
-        | StrOutputParser()
-    )
-    
-    return rag_chain
-
-def query_rag_system(chain, query):
-    """RAGシステムにクエリを実行する"""
-    response = chain.invoke(query)
-    return response
-```
-
-### 7. APIインターフェース
-
-```python
-# src/api/server.py
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from src.config import VECTOR_STORE_DIR, COLLECTION_NAME
-from src.embeddings import get_embeddings_model
-from src.vectorstore import load_vector_store
-from src import rag
-
-app = FastAPI()
-
-# リクエストモデル
-class QueryRequest(BaseModel):
-    query: str
-    project_context: str = "default"
-    max_results: int = 5
-
-# レスポンスモデル
-class QueryResponse(BaseModel):
-    answer: str
-    sources: list
-
-@app.post("/api/query")
-async def query_endpoint(request: QueryRequest):
-    try:
-        # 埋め込みモデルとベクトルストアの初期化
-        embeddings = get_embeddings_model()
-        vectorstore = load_vector_store(
-            persist_directory=str(VECTOR_STORE_DIR),
-            collection_name=request.project_context or COLLECTION_NAME,
-            embedding_model=embeddings
-        )
-        
-        # 関連ドキュメントの検索
-        docs = vectorstore.similarity_search(
-            request.query,
-            k=request.max_results
-        )
-        
-        # 回答生成（ローカルLLMまたはリモートLLMを使用）
-        # ここにLLMを統合
-        
-        # ソースの構築
-        sources = []
-        for doc in docs:
-            sources.append({
-                "title": doc.metadata.get("source", "Unknown"),
-                "content": doc.page_content,
-                "relevance_score": doc.metadata.get("score", 1.0)
-            })
-        
-        # ここで実際の回答生成ロジックを実装
-        answer = "生成された回答はここに表示されます"
-        
-        return QueryResponse(answer=answer, sources=sources)
-    
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-def start_server(host="0.0.0.0", port=3000):
-    import uvicorn
-    uvicorn.run(app, host=host, port=port)
-
-if __name__ == "__main__":
-    start_server()
-```
-
 ## 実装における注意点
 
 ### 1. パフォーマンス最適化
@@ -443,6 +281,6 @@ if __name__ == "__main__":
 
 1. [LangChain Python ドキュメント](https://python.langchain.com/docs/)
 2. [SentenceTransformers ドキュメント](https://www.sbert.net/)
-3. [Chroma ベクトルデータベース](https://docs.trychroma.com/)
-4. [HuggingFace Embeddings](https://huggingface.co/blog/embeddings)
+3. [DuckDB公式ドキュメント](https://duckdb.org/)
+4. [Hugging Face Embeddings](https://huggingface.co/blog/embeddings)
 5. [Vector Database Benchmarks](https://qdrant.tech/benchmarks/)
