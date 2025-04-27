@@ -2,23 +2,30 @@
 
 ## What Works
 
-- (ここに現在機能している部分を記述)
+-   Memory Bank のコアファイル初期化。
+-   プロジェクトの基本ディレクトリ構造 (`rag_core`, `rag_api_server`, `mcp_adapter`) の作成。
+-   各主要ディレクトリへの `README.md` の配置。
+-   `requirements.txt` (依存関係リスト) と `.gitignore` の作成。
+-   ディレクトリ構成に関する決定 ([ADR 002](../../docs/ADR/002_モノレポディレクトリ構成.md)) の文書化。
 
 ## What's Left to Build
 
-- (ここに今後実装が必要な機能を記述)
-- RAGシステムの基本機能
-- MCPサーバーのプロトタイプ
+-   Python 依存関係のインストール (`requirements.txt`)。
+-   DuckDB + VSS 拡張のセットアップ。
+-   埋め込みモデル (`pfnet/plamo-embedding-1b`) の準備 (LM Studio 等)。
+-   `rag_core` 内の各コンポーネント (document_processor, embedding, vectordb) の実装。
+-   `rag_api_server` の API エンドポイント実装と `rag_core` との連携。
+-   `mcp_adapter` の MCP サーバーロジック実装 (SDK 選定含む) と `rag_api_server` との連携。
 
 ## Current Status
 
-- Memory Bank の初期構築完了。
-- 開発環境セットアップに着手する段階。
+-   プロジェクトの基本的な骨格 (ディレクトリ構造、設定ファイル、ドキュメント) のセットアップが完了。
+-   次のステップは Python 依存関係のインストール。
 
 ## Known Issues
 
-- (ここに既知の問題点を記述)
+-   現時点では特になし。
 
 ## Evolution of Project Decisions
 
-- (ここにプロジェクトの進行に伴う決定事項の変遷を記述)
+-   ディレクトリ構成: 初期案から、関心の分離を重視し `rag_core`, `rag_api_server`, `mcp_adapter` に分割する構成に変更 ([ADR 002](../../docs/ADR/002_モノレポディレクトリ構成.md) 参照)。
