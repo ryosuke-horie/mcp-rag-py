@@ -10,7 +10,6 @@
 
 ## What's Left to Build
 
--   Python 依存関係のインストール (`requirements.txt`)。
 -   DuckDB + VSS 拡張のセットアップ。
 -   埋め込みモデル (`pfnet/plamo-embedding-1b`) の準備 (LM Studio 等)。
 -   `rag_core` 内の各コンポーネント (document_processor, embedding, vectordb) の実装。
@@ -19,8 +18,9 @@
 
 ## Current Status
 
--   プロジェクトの基本的な骨格 (ディレクトリ構造、設定ファイル、ドキュメント) のセットアップが完了。
--   次のステップは Python 依存関係のインストール。
+-   プロジェクトの基本的な骨格 (ディレクトリ構造、設定ファイル、ドキュメント) のセットアップ完了。
+-   Python 依存関係のインストール完了 (`.venv` 仮想環境を使用)。
+-   次のステップは DuckDB + VSS 拡張のセットアップ。
 
 ## Known Issues
 
