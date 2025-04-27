@@ -28,7 +28,7 @@
 ### ローダー (`loader.py`) のテスト
 
 ```bash
-python rag_core/document_processor/loader.py
+python3 rag_core/document_processor/loader.py
 ```
 
 このテストは、一時的なディレクトリとファイルを作成し、`.txt` および `.md` ファイルが正しく読み込まれるかを確認します。テスト完了後、作成された一時ファイルは自動的に削除されます。
@@ -36,7 +36,7 @@ python rag_core/document_processor/loader.py
 ### スプリッター (`splitter.py`) のテスト
 
 ```bash
-python rag_core/document_processor/splitter.py
+python3 rag_core/document_processor/splitter.py
 ```
 
 このテストは、ダミーの長文ドキュメントを作成し、デフォルト設定およびカスタム設定でテキストがチャンクに分割されることを確認します。
