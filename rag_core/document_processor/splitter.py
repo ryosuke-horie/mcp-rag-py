@@ -111,6 +111,3 @@ if __name__ == '__main__':
         print(f"An error occurred during testing: {e}")
     finally:
         print("\n--- Splitter test finished ---")
-
-```
-</write_to_file>

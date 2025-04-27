@@ -49,8 +49,6 @@ def load_documents(
     loader = DirectoryLoader(
         directory_path,
         glob=glob_pattern,
-        loader_cls=None, # loader_mapping を使うため None に設定
-        loader_kwargs=None, # loader_mapping を使うため None に設定
         use_multithreading=use_multithreading,
         show_progress=show_progress,
         max_concurrency=max_concurrency,
@@ -127,6 +125,3 @@ if __name__ == '__main__':
         if os.path.exists(TEST_DIR):
             shutil.rmtree(TEST_DIR)
             print(f"\n--- Cleaned up test directory '{TEST_DIR}' ---")
-
-```
-</write_to_file>
