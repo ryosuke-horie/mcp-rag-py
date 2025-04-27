@@ -7,11 +7,14 @@
 -   各主要ディレクトリへの `README.md` の配置。
 -   `requirements.txt` (依存関係リスト) と `.gitignore` の作成。
 -   ディレクトリ構成に関する決定 ([ADR 002](../../docs/ADR/002_モノレポディレクトリ構成.md)) の文書化。
--   `rag_core/document_processor` (Loader, Splitter) の基本実装完了 (LangChain 利用、.txt/.md 対応)。
+-   Python 依存関係のインストール完了 (`.venv` 仮想環境を使用)。
+-   DuckDB + VSS 拡張のセットアップ完了。
+-   `rag_core/document_processor` (Loader, Splitter) の実装完了 (LangChain 利用、.txt/.md 対応)。
+-   `rag_core/embedding` (Ollama API連携) の実装完了 (LangChain 利用、`bge-m3` モデル)。
 
 ## What's Left to Build
 
--   `rag_core` 内の残りのコンポーネント (embedding, vectordb) の実装。
+-   `rag_core/vectordb` (DuckDB+VSS連携) の実装。
 -   `rag_api_server` の API エンドポイント実装と `rag_core` との連携。
 -   `mcp_adapter` の MCP サーバーロジック実装 (SDK 選定含む) と `rag_api_server` との連携。
 
@@ -19,9 +22,10 @@
 
 -   プロジェクトの基本的な骨格 (ディレクトリ構造、設定ファイル、ドキュメント) のセットアップ完了。
 -   Python 依存関係のインストール完了 (`.venv` 仮想環境を使用)。
--   **DuckDB + VSS 拡張のセットアップ完了。**
+-   DuckDB + VSS 拡張のセットアップ完了。
 -   `rag_core/document_processor` の実装完了。
--   次のステップは `rag_core/embedding` の実装開始。
+-   `rag_core/embedding` の実装完了。
+-   次のステップは `rag_core/vectordb` の実装開始。
 
 ## Known Issues
 
