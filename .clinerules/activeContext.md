@@ -2,9 +2,8 @@
 
 ## Current Work Focus
 
--   Python 依存関係のインストール完了 (`.venv` 仮想環境を使用)。
--   次のステップとして、DuckDB + VSS 拡張のセットアップ方法を確認・実施する。
--   引き続き、開発環境セットアップを進める（埋め込みモデル準備）。
+-   `rag_core/document_processor` (Loader, Splitter) の実装完了。
+-   次のステップとして、`rag_core/embedding` (Ollama API連携) の実装を開始する。
 
 ## Recent Changes
 
@@ -16,11 +15,14 @@
 -   `requirements.txt` と `.gitignore` を作成。
 -   ADR 002 を作成し、ディレクトリ構成の決定を記録。
 -   Python 依存関係を `.venv` 仮想環境にインストール (`requirements.txt` に基づく)。
+-   `rag_core/document_processor` の Loader (`loader.py`) と Splitter (`splitter.py`) を LangChain を利用して実装。`.txt` と `.md` ファイルに対応。
 
 ## Next Steps
 
 1.  Ollama で埋め込みモデル（`bge-m3`）を利用可能にする手順を確認・実施する。（完了）
-2.  各コンポーネント (`rag_core`, `rag_api_server`, `mcp_adapter`) の実装を開始する。
-    -   `rag_core/document_processor` (Loader, Splitter)
-    -   `rag_core/embedding` (Ollama API連携)
+2.  `rag_core` コンポーネントの実装を進める。
+    -   `rag_core/document_processor` (Loader, Splitter) - **完了**
+    -   `rag_core/embedding` (Ollama API連携) - **着手**
     -   `rag_core/vectordb` (DuckDB+VSS連携)
+3.  `rag_api_server` の実装。
+4.  `mcp_adapter` の実装。
