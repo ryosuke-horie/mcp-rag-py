@@ -4,29 +4,55 @@
 
 埋め込みベクトルと関連メタデータの保存、および類似ベクトル検索を担当します。ベクトルデータベースとして DuckDB と VSS (Vector Similarity Search) 拡張機能を利用します。
 
-## 現状
+## 実装の詳細
 
--   `storage.py` に `DuckDBVectorStore` クラスが実装されました。
--   このクラスは DuckDB への接続、VSS拡張のロード、テーブル作成、ベクトルデータの挿入・検索処理を提供します。
+### `DuckDBVectorStore` クラス
+
+`storage.py` に実装された `DuckDBVectorStore` クラスは以下の機能を提供します：
+
+1. **初期化とセットアップ**
+   - DuckDB データベースへの接続
+   - VSS拡張機能のインストールとロード
+   - テーブルの自動作成（存在しない場合）
+
+2. **テーブル構造**
+   ```sql
+   CREATE TABLE IF NOT EXISTS {table_name} (
+       id INTEGER PRIMARY KEY,  -- 自動採番ID
+       text VARCHAR,           -- テキストデータ
+       embedding FLOAT[1024]   -- 埋め込みベクトル（bge-m3用に1024次元）
+   );
+   ```
+
+3. **主要メソッド**
+   - `add_embeddings(texts: List[str], embeddings: List[np.ndarray])`: 
+     - テキストと埋め込みベクトルを一括で追加
+     - IDは自動的に連番が付与
+   - `similarity_search(query_embedding: np.ndarray, k: int = 5)`:
+     - コサイン類似度による類似ベクトル検索
+     - `array_cosine_similarity` 関数を使用
+     - 類似度スコアの高い順にk件を返却
 
 ## 動作確認
 
-`storage.py` ファイルを直接実行することで、基本的な動作を確認できます。
+基本的な機能は `storage.py` を直接実行することでテストできます：
 
 ```bash
 # プロジェクトルートディレクトリから実行
 python3 rag_core/vectordb/storage.py
 ```
 
-これにより、以下の処理が実行されます。
+テストプログラムの処理フロー：
 
-1.  `test_vector_store.db` という名前で DuckDB データベースファイルが作成されます。
-2.  `test_embeddings` という名前でテーブルが作成されます。
-3.  3つのダミーテキストとランダムなベクトルがデータベースに追加されます。
-4.  ランダムなクエリベクトルで類似検索が実行され、結果（上位2件）がコンソールに出力されます。
-5.  データベース接続が閉じられます。
+1. テスト用DBファイル `test_vector_store.db` を作成（既存の場合は削除して再作成）
+2. `test_embeddings` テーブルを作成
+3. サンプルテキスト3件とそのランダムな埋め込みベクトルを登録
+4. ランダムなクエリベクトルで類似検索を実行（上位2件）
+5. DB接続を終了
 
-**注意:** 実行後、`test_vector_store.db` ファイルがカレントディレクトリ（プロジェクトルート）に残ります。不要であれば手動で削除してください (`storage.py` 内の削除コードはコメントアウトされています)。
+**注意:** 
+- 実行後、`test_vector_store.db` ファイルがカレントディレクトリに作成されます
+- このファイルは手動で削除するか、次回テスト実行時に自動的に削除されます
 
 ## 関連コンポーネント
 
