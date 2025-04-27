@@ -19,6 +19,8 @@
 
 ## Next Steps
 
-1.  DuckDB + VSS 拡張のセットアップ方法を確認・実施する。
-2.  LM Studio 等で埋め込みモデル (`pfnet/plamo-embedding-1b`) を利用可能にする手順を確認・実施する。
-3.  各コンポーネント (`rag_core`, `rag_api_server`, `mcp_adapter`) の実装を開始する。
+1.  Ollama で埋め込みモデル（`bge-m3`）を利用可能にする手順を確認・実施する。（完了）
+2.  各コンポーネント (`rag_core`, `rag_api_server`, `mcp_adapter`) の実装を開始する。
+    -   `rag_core/document_processor` (Loader, Splitter)
+    -   `rag_core/embedding` (Ollama API連携)
+    -   `rag_core/vectordb` (DuckDB+VSS連携)

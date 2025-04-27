@@ -10,7 +10,6 @@
 
 ## What's Left to Build
 
--   埋め込みモデル (`pfnet/plamo-embedding-1b`) の準備 (LM Studio 等)。
 -   `rag_core` 内の各コンポーネント (document_processor, embedding, vectordb) の実装。
 -   `rag_api_server` の API エンドポイント実装と `rag_core` との連携。
 -   `mcp_adapter` の MCP サーバーロジック実装 (SDK 選定含む) と `rag_api_server` との連携。
@@ -20,7 +19,7 @@
 -   プロジェクトの基本的な骨格 (ディレクトリ構造、設定ファイル、ドキュメント) のセットアップ完了。
 -   Python 依存関係のインストール完了 (`.venv` 仮想環境を使用)。
 -   **DuckDB + VSS 拡張のセットアップ完了。**
--   次のステップは埋め込みモデルの準備。
+-   次のステップは `rag_core` の実装開始。
 
 ## Known Issues
 
