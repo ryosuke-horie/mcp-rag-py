@@ -7,3 +7,4 @@ duckdb
 fastapi
 uvicorn
 pydantic
+pydantic-settings  # Added for configuration management
