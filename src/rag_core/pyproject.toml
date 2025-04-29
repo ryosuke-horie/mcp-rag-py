@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=65.5.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag_core"
+version = "0.1.0"
+description = "Core RAG logic (document processing, embedding, vectordb)"
+requires-python = ">=3.11"
+dependencies = [
+  "langchain>=0.2.0",
+  "langchain-text-splitters",
+  "sentence-transformers",
+  "duckdb",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rag_core*"]
+
+[tool.uv.sources]
+rag_core = { workspace = true }

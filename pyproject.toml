@@ -1,7 +1,24 @@
+[build-system]
+requires = ["uv>=0.6.17,<0.7.0"]
+build-backend = "uv.build.api"
+
 [project]
 name = "mcp-rag"
 version = "0.1.0"
-description = "Add your description here"
-readme = "README.md"
-requires-python = ">=3.13"
-dependencies = []
+requires-python = ">=3.11"
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = [
+  "src/rag_core",
+  "src/rag_api_server",
+  "src/mcp_adapter",
+]
+
+[tool.uv.sources]
+# PEP 503 正規化後のパッケージ名 = { workspace = true; (必要なら path も) }
+"rag-core"        = { workspace = true }
+"rag-api-server"  = { workspace = true }
+"mcp-adapter"     = { workspace = true }
