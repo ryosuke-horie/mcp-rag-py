@@ -1,11 +1,17 @@
 """RAG API Server client module."""
 
 import json
+import sys
+import os
+
+# モジュールのパスを追加
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from typing import Any, Dict, List, Optional
 
 import httpx
 
-from .config import settings
+from mcp_adapter.config import settings
 
 
 class RAGApiClient:
