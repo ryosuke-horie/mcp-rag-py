@@ -2,23 +2,18 @@
 
 ## Current Work Focus
 
--   `rag_api_server` の実装が完了:
-    - FastAPIアプリケーションの初期設定
-    - `rag_core` との連携実装
-    - APIエンドポイントの実装（ドキュメント登録と検索機能）
-    - CORSサポートの追加
-    - 設定管理機能の実装（環境変数による設定のカスタマイズ）
-    - インポート問題の解決（プロジェクトルートからの実行方式の採用）
-    - 詳細なREADMEの整備（セットアップ手順、API仕様など）
+-   `rag_api_server` の動作検証完了:
+    -   `rag_core/vectordb/storage.py` の `AttributeError` を修正。
+    -   `GET /`, `POST /documents/`, `POST /search/` エンドポイントの正常動作を確認。
+-   プロジェクトルートの `README.md` を更新:
+    -   セットアップ手順、サーバー起動方法、API仕様、使用例を追記。
 -   次のステップとして、`mcp_adapter` の実装を開始する。
 
 ## Recent Changes
 
--   `rag_api_server` の実装完了。主な実装内容：
-    -   `config.py`: 環境変数を使用した設定管理
-    -   `core.py`: RAGコア機能の統合
-    -   `main.py`: FastAPIアプリケーションとエンドポイントの実装
-    -   `README.md`: 詳細な使用方法とAPI仕様の文書化
+-   `rag_api_server` の動作検証を実施し、正常動作を確認。
+    -   `rag_core/vectordb/storage.py` の型ヒントとデータ処理を修正 (`AttributeError: 'list' object has no attribute 'tolist'` を解決)。
+-   プロジェクトルートの `README.md` を更新し、セットアップ手順や使い方を詳細化。
 
 ## Next Steps
 

@@ -18,7 +18,12 @@
     - APIエンドポイント（ドキュメント登録、検索）の実装
     - 環境変数ベースの設定管理
     - CORSサポート
-    - 実行手順と使用方法のドキュメント化
+    - 実行手順と使用方法のドキュメント化 (`rag_api_server/README.md`)
+-   `rag_api_server` の動作検証完了:
+    -   `rag_core/vectordb/storage.py` の `AttributeError` を修正。
+    -   主要な API エンドポイント (`GET /`, `POST /documents/`, `POST /search/`) の正常動作を確認。
+-   プロジェクトルート `README.md` の更新:
+    -   セットアップ手順、サーバー起動方法、API 仕様、使用例を追記。
 
 ## What's Left to Build
 
@@ -32,12 +37,13 @@
 
 ## Current Status
 
--   `rag_api_server` の実装が完了し、動作確認済み：
-    - プロジェクトルートからの実行方式を採用
-    - 仮想環境と依存関係の管理方法を確立
-    - API の基本機能（ヘルスチェック、ドキュメント登録、検索）が動作
-    - SwaggerUI でのAPI確認が可能
--   次のステップは `mcp_adapter` の実装開始
+-   `rag_api_server` の実装と動作検証が完了:
+    -   プロジェクトルートからの実行方式を採用。
+    -   仮想環境と依存関係の管理方法を確立。
+    -   API の基本機能（ヘルスチェック、ドキュメント登録、検索）が正常に動作。
+    -   SwaggerUI でのAPI確認が可能。
+    -   ルート `README.md` に詳細な利用手順を記載済み。
+-   次のステップは `mcp_adapter` の実装開始。
 
 ## Known Issues
 
