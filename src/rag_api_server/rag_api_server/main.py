@@ -1,8 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any
 from contextlib import asynccontextmanager
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 
 from .core import RAGCore
 
@@ -32,6 +34,17 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan
 )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=422,
+        content={
+            "message": "Request validation failed",
+            "errors": exc.errors(),
+            "body": exc.body,      # 送られてきた生ボディ
+        },
+    )
 
 # CORS設定
 app.add_middleware(
