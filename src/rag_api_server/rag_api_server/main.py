@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from contextlib import asynccontextmanager
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
@@ -71,6 +71,16 @@ class SearchResult(BaseModel):
 class SearchResponse(BaseModel):
     results: List[SearchResult] = Field(..., description="検索結果のリスト")
 
+class ContentRequest(BaseModel):
+    content: str = Field(..., description="登録したいテキストコンテンツ")
+    metadata: Optional[Dict[str, Any]] = Field(default=None, description="コンテンツに関する追加情報 (例: source_url)")
+
+class ContentResponse(BaseModel):
+    status: str = Field(..., description="処理ステータス ('success' または 'error')")
+    message: str = Field(..., description="処理結果のメッセージ")
+    processed_chunks: Optional[int] = Field(default=None, description="処理されたチャンク数")
+
+
 # 基本的なルート
 @app.get("/")
 async def root():
@@ -118,3 +128,31 @@ async def search_documents(request: SearchRequest) -> SearchResponse:
         ])
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# コンテンツ登録エンドポイント
+@app.post("/contents/", response_model=ContentResponse)
+async def add_content(request: ContentRequest) -> ContentResponse:
+    """
+    指定されたテキストコンテンツを処理し、ベクトルDBに保存します。
+    コンテンツはチャンク化されてから保存されます。
+    """
+    if not rag_core:
+        raise HTTPException(status_code=500, detail="RAGCore is not initialized")
+
+    try:
+        result = await rag_core.add_single_content(
+            content=request.content,
+            metadata=request.metadata
+        )
+        if result["status"] == "error":
+            # エラーの場合は processed_chunks を含めない
+            return ContentResponse(status="error", message=result["message"])
+        else:
+            return ContentResponse(
+                status="success",
+                message=result["message"],
+                processed_chunks=result.get("processed_chunks") # エラー時はNoneになる
+            )
+    except Exception as e:
+        # 予期せぬエラー
+        raise HTTPException(status_code=500, detail=f"Error adding content: {str(e)}")

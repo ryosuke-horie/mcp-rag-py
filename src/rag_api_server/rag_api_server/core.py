@@ -1,5 +1,6 @@
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
+from langchain_core.documents import Document # Documentを追加
 
 from rag_core.document_processor.loader import load_documents
 from rag_core.document_processor.splitter import split_documents
@@ -116,6 +117,53 @@ class RAGCore:
         except Exception as e:
             print(f"Error during search: {e}")
             raise
+
+    async def add_single_content(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """
+        単一のテキストコンテンツを処理し、チャンク化してベクトルDBに保存する
+
+        Args:
+            content: 登録するテキストコンテンツ
+            metadata: コンテンツに関連するメタデータ (オプション)
+
+        Returns:
+            処理結果を含む辞書
+        """
+        try:
+            # コンテンツをDocumentオブジェクトに変換
+            # メタデータがない場合は空の辞書を使用
+            doc_metadata = metadata if metadata is not None else {}
+            document = Document(page_content=content, metadata=doc_metadata)
+
+            # ドキュメントの分割 (単一ドキュメントをリストとして渡す)
+            print("Splitting content into chunks...")
+            chunks = split_documents([document]) # split_documentsはリストを受け取る
+            if not chunks:
+                return {"status": "no_chunks", "message": "No chunks created from the content"}
+
+            # テキストとメタデータの抽出 (現状メタデータはDBに保存しないが、将来のために抽出はしておく)
+            texts = [chunk.page_content for chunk in chunks]
+            # chunk_metadata = [chunk.metadata for chunk in chunks] # 必要に応じて利用
+
+            # 埋め込みの生成
+            print("Generating embeddings...")
+            embeddings = embed_texts(texts, self.embeddings)
+
+            # ベクトルDBへの保存
+            print("Storing embeddings in the vector database...")
+            # 現状のadd_embeddingsはテキストと埋め込みのみ受け取る
+            self.vector_store.add_embeddings(texts, embeddings)
+
+            return {
+                "status": "success",
+                "processed_chunks": len(chunks),
+                "message": "Content processed and stored successfully"
+            }
+
+        except Exception as e:
+            error_message = f"Error processing content: {str(e)}"
+            print(error_message)
+            return {"status": "error", "message": error_message}
 
     def close(self):
         """リソースの解放"""
