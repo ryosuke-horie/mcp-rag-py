@@ -45,22 +45,19 @@ class DuckDBVectorStore:
             print(f"Error creating table: {e}")
             raise
 
-    def add_embeddings(self, texts: List[str], embeddings: List[np.ndarray]):
+    def add_embeddings(self, texts: List[str], embeddings: List[List[float]]):
         """
         Adds text chunks and their corresponding embeddings to the store.
 
         Args:
             texts (List[str]): List of text chunks.
-            embeddings (List[np.ndarray]): List of corresponding embeddings (NumPy arrays).
+            embeddings (List[List[float]]): List of corresponding embeddings (lists of floats).
         """
         if len(texts) != len(embeddings):
             raise ValueError("Number of texts and embeddings must match.")
         if not embeddings:
             print("No embeddings provided to add.")
             return
-
-        # Ensure embeddings are lists of floats for DuckDB
-        embeddings_list = [emb.tolist() for emb in embeddings]
 
         # Get the next available ID
         try:
@@ -74,7 +71,7 @@ class DuckDBVectorStore:
         try:
             self.conn.begin() # Start transaction
             # Insert data row by row with manually managed IDs
-            for i, (text, embedding) in enumerate(zip(texts, embeddings_list), start=1):
+            for i, (text, embedding) in enumerate(zip(texts, embeddings), start=1):
                 self.conn.execute(insert_sql, [max_id + i, text, embedding])
             self.conn.commit() # Commit changes if all insertions succeed
             print(f"Successfully added {len(texts)} embeddings.")
@@ -84,23 +81,20 @@ class DuckDBVectorStore:
             raise
         # No finally block needed as connection closing is handled in `close` method
 
-    def similarity_search(self, query_embedding: np.ndarray, k: int = 5) -> List[Tuple[str, float]]:
+    def similarity_search(self, query_embedding: List[float], k: int = 5) -> List[Tuple[str, float]]:
         """
         Performs similarity search using cosine similarity.
 
         Args:
-            query_embedding (np.ndarray): The query embedding (NumPy array).
+            query_embedding (List[float]): The query embedding (list of floats).
             k (int): Number of nearest neighbors to retrieve.
 
         Returns:
             List[Tuple[str, float]]: List of (text, similarity_score) tuples.
         """
-        if not isinstance(query_embedding, np.ndarray):
-             raise TypeError("query_embedding must be a NumPy array.")
-        if query_embedding.shape != (self.embedding_dim,):
-            raise ValueError(f"Query embedding dimension mismatch. Expected {self.embedding_dim}, got {query_embedding.shape}")
-
-        query_embedding_list = query_embedding.tolist()
+        # Optional: Add a check for the length of the list if needed
+        # if len(query_embedding) != self.embedding_dim:
+        #     raise ValueError(f"Query embedding dimension mismatch. Expected {self.embedding_dim}, got {len(query_embedding)}")
 
         # Use array_distance for cosine similarity (1 - cosine distance)
         # Note: VSS uses list_similarity for cosine similarity directly in newer versions,
@@ -112,7 +106,7 @@ class DuckDBVectorStore:
         LIMIT ?;
         """
         try:
-            results = self.conn.execute(search_sql, [query_embedding_list, k]).fetchall()
+            results = self.conn.execute(search_sql, [query_embedding, k]).fetchall()
             # Convert results to desired format (text, score)
             # fetchall returns list of tuples, e.g., [('doc1 text', 0.98), ('doc2 text', 0.95)]
             return results

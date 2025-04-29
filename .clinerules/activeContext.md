@@ -2,38 +2,22 @@
 
 ## Current Work Focus
 
--   `rag_core/vectordb` (DuckDB+VSS連携) の実装が完了し、以下の知見を得た：
-    - DuckDBでの自動採番実装方法（アプリケーション側での管理）
-    - VSS拡張の類似度検索関数の正しい使用法
-    - 適切なエラーハンドリングの重要性
--   次のステップとして、`rag_api_server` の実装を開始する。
+-   `rag_api_server` の動作検証完了:
+    -   `rag_core/vectordb/storage.py` の `AttributeError` を修正。
+    -   `GET /`, `POST /documents/`, `POST /search/` エンドポイントの正常動作を確認。
+-   プロジェクトルートの `README.md` を更新:
+    -   セットアップ手順、サーバー起動方法、API仕様、使用例を追記。
+-   次のステップとして、`mcp_adapter` の実装を開始する。
 
 ## Recent Changes
 
--   Memory Bank のコアファイル (`projectbrief.md`, `productContext.md`, `systemPatterns.md`, `techContext.md`, `progress.md`, `activeContext.md`) の初期バージョンを作成。
--   プロジェクトのディレクトリ構造を定義し、関連ファイル (`__init__.py`, `README.md` 等) を作成 ([ADR 002](../../docs/ADR/002_モノレポディレクトリ構成.md) 参照)。
-    -   `rag_core` (コアロジック)
-    -   `rag_api_server` (FastAPI サーバー雛形)
-    -   `mcp_adapter` (MCP アダプター雛形)
--   `requirements.txt` と `.gitignore` を作成。
--   ADR 002 を作成し、ディレクトリ構成の決定を記録。
--   Python 依存関係を `.venv` 仮想環境にインストール (`requirements.txt` に基づく)。
--   `rag_core/document_processor` の Loader (`loader.py`) と Splitter (`splitter.py`) を LangChain を利用して実装。`.txt` と `.md` ファイルに対応。
--   `rag_core/embedding` の Model (`model.py`) を LangChain (`langchain-ollama`) を利用して実装。Ollama (`bge-m3`) と連携。
--   `rag_core/vectordb` の Storage (`storage.py`) を DuckDB+VSS を利用して実装：
-    - 手動ID管理によるデータ挿入機能
-    - コサイン類似度による検索機能
-    - 詳細な実装知見をREADMEに記録
+-   `rag_api_server` の動作検証を実施し、正常動作を確認。
+    -   `rag_core/vectordb/storage.py` の型ヒントとデータ処理を修正 (`AttributeError: 'list' object has no attribute 'tolist'` を解決)。
+-   プロジェクトルートの `README.md` を更新し、セットアップ手順や使い方を詳細化。
 
 ## Next Steps
 
-1.  Ollama で埋め込みモデル（`bge-m3`）を利用可能にする手順を確認・実施する。（完了）
-2.  `rag_core` コンポーネントの実装を進める。
-    -   `rag_core/document_processor` (Loader, Splitter) - **完了**
-    -   `rag_core/embedding` (Ollama API連携) - **完了**
-    -   `rag_core/vectordb` (DuckDB+VSS連携) - **完了**
-3.  `rag_api_server` の実装を開始する：
-    -   FastAPIアプリケーションの初期設定
-    -   `rag_core` との連携実装
-    -   APIエンドポイントの設計と実装
-4.  `mcp_adapter` の実装。
+1.  `mcp_adapter` の実装を開始する:
+    -   MCPサーバーのスケルトンコード作成
+    -   `rag_api_server` との連携実装
+    -   MCPツールとリソースの定義
