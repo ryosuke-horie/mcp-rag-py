@@ -41,27 +41,28 @@ class RAGApiClient:
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=data)
             response.raise_for_status()
+            # searchの結果は {"results": [...]} の形式なので、それをそのまま返す
             return response.json()
 
-    async def add_document(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Add a document to the RAG system.
+    async def add_content(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Add text content to the RAG system via the /contents/ endpoint.
 
         Args:
-            content: The document content.
-            metadata: Optional document metadata.
+            content: The text content to add.
+            metadata: Optional metadata associated with the content.
 
         Returns:
-            The created document information.
+            The response from the RAG API server (e.g., status, message, processed_chunks).
         """
-        url = f"{self.base_url}/documents/"
+        url = f"{self.base_url}/contents/" # 新しいエンドポイントに変更
         data = {"content": content}
         if metadata:
-            data["metadata"] = metadata
-        
+            data["metadata"] = metadata # metadataも送信
+
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=data)
-            response.raise_for_status()
-            return response.json()
+            response.raise_for_status() # エラーがあれば例外発生
+            return response.json() # APIからのレスポンスをそのまま返す
 
     async def health_check(self) -> Dict[str, Any]:
         """Check if the RAG API Server is healthy.

@@ -17,7 +17,6 @@ import httpx
 from mcp.server.fastmcp import Context, FastMCP
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 class Settings(BaseSettings):
     """MCP Adapter settings."""
 
@@ -34,9 +33,7 @@ class Settings(BaseSettings):
     port: int = 8080
     log_level: str = "info"
 
-
 settings = Settings()
-
 
 class RAGApiClient:
     """Client for the RAG API Server."""
@@ -49,7 +46,7 @@ class RAGApiClient:
         """
         self.base_url = base_url or settings.rag_api_base_url
 
-    async def search(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
+    async def search(self, query: str, top_k: int = 5) -> Dict[str, Any]: # Return type changed for clarity
         """Search for documents matching the query.
 
         Args:
@@ -57,7 +54,7 @@ class RAGApiClient:
             top_k: Number of results to return.
 
         Returns:
-            List of matching documents with their metadata and similarity scores.
+            The JSON response from the server, expected to contain a 'results' key.
         """
         url = f"{self.base_url}/search/"
         data = {"query": query, "top_k": top_k}
@@ -65,27 +62,28 @@ class RAGApiClient:
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=data)
             response.raise_for_status()
+            # searchの結果は {"results": [...]} の形式なので、それをそのまま返す
             return response.json()
 
-    async def add_document(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Add a document to the RAG system.
+    async def add_content(self, content: str, metadata: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+        """Add text content to the RAG system via the /contents/ endpoint.
 
         Args:
-            content: The document content.
-            metadata: Optional document metadata.
+            content: The text content to add.
+            metadata: Optional metadata associated with the content.
 
         Returns:
-            The created document information.
+            The response from the RAG API server (e.g., status, message, processed_chunks).
         """
-        url = f"{self.base_url}/documents/"
+        url = f"{self.base_url}/contents/" # 新しいエンドポイントに変更
         data = {"content": content}
         if metadata:
-            data["metadata"] = metadata
-        
+            data["metadata"] = metadata # metadataも送信
+
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=data)
-            response.raise_for_status()
-            return response.json()
+            response.raise_for_status() # エラーがあれば例外発生
+            return response.json() # APIからのレスポンスをそのまま返す
 
     async def health_check(self) -> Dict[str, Any]:
         """Check if the RAG API Server is healthy.
@@ -100,7 +98,6 @@ class RAGApiClient:
             response.raise_for_status()
             return response.json()
 
-
 # Create a default client instance
 rag_client = RAGApiClient()
 
@@ -113,7 +110,6 @@ logger = logging.getLogger("mcp_adapter")
 
 # Create MCP server
 mcp = FastMCP(settings.server_name)
-
 
 @mcp.tool()
 async def search_documents(query: str, top_k: int = 5, ctx: Context = None) -> str:
@@ -131,16 +127,19 @@ async def search_documents(query: str, top_k: int = 5, ctx: Context = None) -> s
         ctx.info(f"Searching for: {query}")
     
     try:
-        results = await rag_client.search(query, top_k)
+        # rag_client.search は {"results": [...]} を返す想定
+        response_data = await rag_client.search(query, top_k)
+        results = response_data.get("results", []) # resultsキーからリストを取得
         
         if not results:
             return "No relevant documents found."
         
         formatted_results = "## Search Results\n\n"
+        # results は [{'text': '...', 'similarity': 0.9}, ...] の形式
         for i, result in enumerate(results, 1):
-            content = result.get("content", "No content available")
-            score = result.get("score", 0.0)
-            formatted_results += f"### Result {i} (Similarity: {score:.4f})\n\n{content}\n\n"
+            text = result.get("text", "No content available")
+            similarity = result.get("similarity", 0.0)
+            formatted_results += f"### Result {i} (Similarity: {similarity:.4f})\n\n{text}\n\n"
         
         return formatted_results
     
@@ -148,32 +147,44 @@ async def search_documents(query: str, top_k: int = 5, ctx: Context = None) -> s
         logger.error(f"Error searching documents: {e}")
         return f"Error searching documents: {str(e)}"
 
-
 @mcp.tool()
-async def add_document(content: str, title: Optional[str] = None, ctx: Context = None) -> str:
-    """Add a new document to the RAG system.
+async def add_content(content: str, source_description: Optional[str] = None, source_url: Optional[str] = None, ctx: Context = None) -> str:
+    """Add text content to the RAG system. The content will be chunked and embedded.
     
     Args:
-        content: The document content.
-        title: Optional document title.
+        content: The text content to add.
+        source_description: Optional description of the content's source (e.g., "Brave Search result").
+        source_url: Optional URL of the content's source.
         ctx: MCP context (auto-injected).
     
     Returns:
-        Status message about the document addition.
+        Status message about the content addition.
     """
     if ctx:
-        ctx.info(f"Adding document: {title if title else 'Untitled'}")
+        ctx.info(f"Adding content (Source: {source_description or 'Unknown'})")
     
     try:
-        metadata = {"title": title} if title else {}
-        result = await rag_client.add_document(content, metadata)
+        # メタデータを作成 (APIが受け取る形式に合わせる)
+        metadata = {}
+        if source_description:
+            metadata["source_description"] = source_description
+        if source_url:
+            metadata["source_url"] = source_url
+            
+        # rag_client.add_content を呼び出す (metadataが空辞書でもOK)
+        result = await rag_client.add_content(content, metadata if metadata else None)
         
-        return f"Document added successfully with ID: {result.get('id')}."
+        # APIからのレスポンスに基づいてメッセージを生成
+        if result.get("status") == "success":
+            processed_chunks = result.get("processed_chunks", "N/A")
+            return f"Content added successfully. Processed {processed_chunks} chunks."
+        else:
+            error_message = result.get("message", "Unknown error")
+            return f"Failed to add content: {error_message}"
     
     except Exception as e:
-        logger.error(f"Error adding document: {e}")
-        return f"Error adding document: {str(e)}"
-
+        logger.error(f"Error adding content: {e}")
+        return f"Error adding content: {str(e)}"
 
 @mcp.tool()
 async def check_rag_status(ctx: Context = None) -> str:
@@ -196,7 +207,6 @@ async def check_rag_status(ctx: Context = None) -> str:
         logger.error(f"Error checking RAG API Server status: {e}")
         return f"RAG API Server appears to be unavailable: {str(e)}"
 
-
 @mcp.resource("rag-info://status")
 async def get_rag_status() -> str:
     """Get the current status of the RAG system.
@@ -212,7 +222,6 @@ async def get_rag_status() -> str:
         logger.error(f"Error getting RAG system status: {e}")
         return "# RAG System Status\n\n- Status: Offline\n- Error: Unable to connect to RAG API Server"
 
-
 def main():
     """Run the MCP server."""
     logger.info(f"Starting MCP server: {settings.server_name}")
@@ -220,7 +229,6 @@ def main():
     
     # Run the MCP server
     mcp.run()
-
 
 if __name__ == "__main__":
     main()
