@@ -34,8 +34,9 @@
 
 ## What's Left to Build
 
--   `mcp_adapter` のテスト実装 (単体テスト、結合テスト)。
--   `rag_api_server` と `mcp_adapter` を連携させたエンドツーエンドテスト。
+-   **uv の調査:** Python 初心者向けにインストール、利用方法、`venv` との違い、注意点などを調査する。
+-   **uv への移行 (調査結果による):** プロジェクトの仮想環境を `venv` から `uv` に移行する。
+-   `mcp_adapter` のテスト実装 (単体テスト、結合テスト、エンドツーエンドテスト)。
 -   必要に応じて `mcp_adapter` にドキュメントインデックス用ツールの追加。
 -   Memory Bank の継続的な更新。
 
@@ -43,7 +44,8 @@
 
 -   `rag_api_server` の実装と動作検証が完了。
 -   `mcp_adapter` の実装が完了し、Python MCP SDK を使用して `rag_api_server` の機能を MCP ツールとして公開。
--   次のステップは、実装された `mcp_adapter` のテスト。
+-   次のステップは、`venv` から `uv` への移行を検討するための **`uv` の調査**。
+-   `uv` 調査完了後、`mcp_adapter` のテスト実装を予定。
 
 ## Known Issues
 
