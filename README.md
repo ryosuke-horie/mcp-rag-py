@@ -6,6 +6,10 @@
 2. RAGにプロジェクト固有の情報を溜め込む（チーム固有のルールや規約、利用する技術の公式ドキュメント情報など）
 3. Claude等のツールからMCPを経由して情報を呼び出し、生成されるコードに改善が見られるか検証する
 
+## Claude Desktopへのインストール
+
+`uv run mcp install src/mcp_adapter/mcp_adapter/server_standalone.py`
+
 ### Ollama モデルの準備
 
 RAG システムで使用する埋め込みモデル (`bge-m3`) を Ollama で利用可能にします。
