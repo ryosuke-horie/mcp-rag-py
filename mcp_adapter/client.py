@@ -14,10 +14,12 @@ def query_rag_api(query: str) -> dict:
         query: The natural language query string.
 
     Returns:
-        A dictionary containing the answer and sources, or raises an exception on error.
+        A dictionary containing the search results, or raises an exception on error.
     """
-    endpoint = f"{RAG_API_URL}/query"
+    endpoint = f"{RAG_API_URL}/search/" # Correct endpoint is /search/
+    # The /search/ endpoint expects 'query' and optionally 'top_k'
     payload = {"query": query}
+    # Consider adding top_k if needed, e.g., payload["top_k"] = 5
     try:
         response = requests.post(endpoint, json=payload)
         response.raise_for_status() # Raise an exception for bad status codes (4xx or 5xx)

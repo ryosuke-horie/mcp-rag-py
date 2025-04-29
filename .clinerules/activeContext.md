@@ -2,22 +2,25 @@
 
 ## Current Work Focus
 
--   `rag_api_server` の動作検証完了:
-    -   `rag_core/vectordb/storage.py` の `AttributeError` を修正。
-    -   `GET /`, `POST /documents/`, `POST /search/` エンドポイントの正常動作を確認。
--   プロジェクトルートの `README.md` を更新:
-    -   セットアップ手順、サーバー起動方法、API仕様、使用例を追記。
--   次のステップとして、`mcp_adapter` の実装を開始する。
+-   `mcp_adapter` の実装完了。
+-   次のステップとして、実装された `mcp_adapter` のテストを行う。
 
 ## Recent Changes
 
--   `rag_api_server` の動作検証を実施し、正常動作を確認。
-    -   `rag_core/vectordb/storage.py` の型ヒントとデータ処理を修正 (`AttributeError: 'list' object has no attribute 'tolist'` を解決)。
--   プロジェクトルートの `README.md` を更新し、セットアップ手順や使い方を詳細化。
+-   `mcp_adapter` を Python MCP SDK (`modelcontextprotocol`) を使用して実装。
+    -   `requirements.txt` に依存関係 (`requests`, `modelcontextprotocol`) を追加。
+    -   `mcp_spec.py` を SDK の `Tool` クラスと Pydantic モデルで更新。
+    -   `client.py` の API エンドポイントを `/search/` に修正。
+    -   `main.py` に SDK ベースのサーバーロジックとツールハンドラーを実装。
+    -   `README.md` に実装詳細と実行手順を更新。
+-   `rag_api_server` の問い合わせエンドポイントが `/search/` であることを確認。
+-   Memory Bank (`progress.md`, `activeContext.md`) を更新。
 
 ## Next Steps
 
-1.  `mcp_adapter` の実装を開始する:
-    -   MCPサーバーのスケルトンコード作成
-    -   `rag_api_server` との連携実装
-    -   MCPツールとリソースの定義
+1.  `mcp_adapter` のテスト実装を開始する:
+    -   単体テスト (各コンポーネント、特にハンドラーロジック)。
+    -   結合テスト (`mcp_adapter` と `rag_api_server` の連携)。
+    -   エンドツーエンドテスト (MCPクライアントからのツール呼び出し)。
+2.  必要に応じて `mcp_adapter` にドキュメントインデックス用ツールの追加を検討する。
+3.  Memory Bank の継続的な更新。

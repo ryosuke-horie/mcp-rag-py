@@ -24,26 +24,26 @@
     -   主要な API エンドポイント (`GET /`, `POST /documents/`, `POST /search/`) の正常動作を確認。
 -   プロジェクトルート `README.md` の更新:
     -   セットアップ手順、サーバー起動方法、API 仕様、使用例を追記。
+-   `mcp_adapter` の実装完了:
+    -   Python MCP SDK (`modelcontextprotocol`) を使用。
+    -   `requirements.txt` に依存関係 (`requests`, `modelcontextprotocol`) を追加。
+    -   `mcp_spec.py` を SDK の `Tool` クラスと Pydantic モデルで更新。
+    -   `client.py` の API エンドポイントを `/search/` に修正。
+    -   `main.py` に SDK ベースのサーバーロジックとツールハンドラーを実装。
+    -   `README.md` に実装詳細と実行手順を更新。
 
 ## What's Left to Build
 
--   `mcp_adapter` の MCP サーバーロジック実装:
-    - MCPサーバーの基本構造の実装
-    - `rag_api_server` との連携機能
-    - MCPツールとリソースの定義と実装
-    - エラーハンドリングとログ記録
-    - 設定管理機能
-    - ドキュメントの整備
+-   `mcp_adapter` のテスト実装 (単体テスト、結合テスト)。
+-   `rag_api_server` と `mcp_adapter` を連携させたエンドツーエンドテスト。
+-   必要に応じて `mcp_adapter` にドキュメントインデックス用ツールの追加。
+-   Memory Bank の継続的な更新。
 
 ## Current Status
 
--   `rag_api_server` の実装と動作検証が完了:
-    -   プロジェクトルートからの実行方式を採用。
-    -   仮想環境と依存関係の管理方法を確立。
-    -   API の基本機能（ヘルスチェック、ドキュメント登録、検索）が正常に動作。
-    -   SwaggerUI でのAPI確認が可能。
-    -   ルート `README.md` に詳細な利用手順を記載済み。
--   次のステップは `mcp_adapter` の実装開始。
+-   `rag_api_server` の実装と動作検証が完了。
+-   `mcp_adapter` の実装が完了し、Python MCP SDK を使用して `rag_api_server` の機能を MCP ツールとして公開。
+-   次のステップは、実装された `mcp_adapter` のテスト。
 
 ## Known Issues
 

@@ -1,49 +1,76 @@
-# Main entry point for the MCP Adapter Server
+# Main entry point for the MCP Adapter Server using Python MCP SDK
 
-from .mcp_spec import get_tools, get_resources
+import asyncio
+import json
+from modelcontextprotocol.server.mcp import McpServer
+from modelcontextprotocol.server.stdio import StdioServerTransport
+from modelcontextprotocol.server.tools import ToolResult
+from modelcontextprotocol.server.exceptions import McpError
+
+# Import the tool definition and its input schema
+from .mcp_spec import query_rag_tool, QueryRagInput
+# Import the client function to call the RAG API
 from .client import query_rag_api
-# Assume an MCP SDK or framework is used to run the server
-# from mcp_sdk import McpServer, ToolExecutionResult, McpError
 
-def execute_query_rag_system(arguments: dict) -> dict:
+async def handle_query_rag_system(params: QueryRagInput) -> ToolResult:
     """
-    Executes the 'query_rag_system' tool by calling the RAG API client.
+    Async handler function for the 'query_rag_system' tool.
+    Calls the RAG API client and returns the result.
     """
-    query = arguments.get("query")
-    if not query:
-        # This should ideally be caught by schema validation in the SDK/framework
-        raise ValueError("Missing 'query' argument.")
+    print(f"Executing query_rag_system with query: '{params.query}', top_k: {params.top_k}")
     try:
         # Call the client function that interacts with rag_api_server
-        api_response = query_rag_api(query)
-        # Format the response according to the tool's output schema (if defined)
-        # For now, just return the raw API response
-        return api_response
+        # Note: query_rag_api currently only takes 'query'.
+        # If top_k needs to be passed, client.py needs modification.
+        # For now, we only pass the query.
+        api_response = query_rag_api(query=params.query)
+
+        # Format the response as a JSON string for ToolResult content
+        # Assuming api_response is a dictionary like {'results': [...]}
+        content_json = json.dumps(api_response, ensure_ascii=False, indent=2)
+
+        print(f"API Response received, returning ToolResult.")
+        return ToolResult(content=content_json)
+
     except Exception as e:
-        print(f"Error executing query_rag_system: {e}")
-        # Convert the exception to an appropriate MCP error format
-        # raise McpError(f"Failed to query RAG API: {e}")
-        raise # Re-raise for now
+        error_message = f"Error executing query_rag_system: {e}"
+        print(error_message)
+        # Convert the exception to an McpError for the client
+        raise McpError(message=error_message)
 
-# --- MCP Server Setup (Hypothetical using an SDK) ---
+# Assign the actual handler function to the tool instance
+query_rag_tool.handler = handle_query_rag_system
 
-# Define how tools map to execution functions
-TOOL_EXECUTORS = {
-    "query_rag_system": execute_query_rag_system,
-}
+# --- MCP Server Setup ---
 
-# This part depends heavily on the specific MCP Server SDK/Framework used.
-# The following is a conceptual example:
+# Create the McpServer instance
+server = McpServer(
+    name="rag-mcp-adapter", # Choose a suitable name
+    version="0.1.0"
+)
 
-# if __name__ == "__main__":
-#     server = McpServer(
-#         tools=get_tools(),
-#         resources=get_resources(),
-#         tool_executors=TOOL_EXECUTORS
-#     )
-#     print("Starting MCP Adapter Server...")
-#     # server.run(host="0.0.0.0", port=8001) # Example port
-#     print("MCP Adapter Server stopped.")
-#     # For now, just print that the structure is ready
-    print("MCP Adapter main.py structure created.")
-    print("Actual server execution depends on the chosen MCP Server SDK/Framework.")
+# Add the defined tool(s) to the server instance
+server.add_tool(query_rag_tool)
+# server.add_root(...) # Add roots if resources are defined
+
+# --- Server Execution ---
+
+async def main():
+    """
+    Main async function to run the MCP server with StdioTransport.
+    """
+    # Use StdioServerTransport for communication via standard input/output
+    transport = StdioServerTransport(server)
+    print("Starting MCP Adapter Server on stdio...")
+    try:
+        await transport.run()
+    except Exception as e:
+        print(f"MCP Server encountered an error: {e}")
+    finally:
+        print("MCP Adapter Server stopped.")
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\nMCP Adapter Server interrupted by user.")
