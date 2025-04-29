@@ -1,0 +1,19 @@
+# src/rag_api_server/pyproject.toml
+[build-system]
+requires = ["setuptools>=65.5", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag_api_server"
+version = "0.1.0"
+description = "FastAPI server exposing rag_core functionality"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi",
+  "uvicorn[standard]",
+  "rag_core",
+]
+
+[tool.setuptools]
+packages = ["rag_api_server"]
+include-package-data = true

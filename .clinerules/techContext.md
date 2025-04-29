@@ -7,13 +7,12 @@
 
 ## 開発環境セットアップ
 
-- Python 3.10+ (`.venv` 仮想環境を使用)
-- `pip` を使用して `requirements.txt` に記載された依存関係をインストール済み。
+- Python 3.11+ (CPython)
+- `uv` (>=0.6.17) を使用して依存関係を管理 (`uv sync` で `.venv` を生成・同期)。
 - **DuckDB と VSS 拡張:**
-    - Python バインディング: `pip install duckdb` (requirements.txt に追加済み想定)
+    - Python バインディング: `uv sync` によりインストールされる (各サブプロジェクトの `pyproject.toml` で定義)。
     - VSS 拡張: DuckDB 内から `INSTALL vss; LOAD vss;` を実行してインストール・ロード。
 - Ollama (埋め込みモデル用、`bge-m3` を使用)
-- 例: Docker (オプション)
 
 ## 技術的制約
 
@@ -22,10 +21,13 @@
 
 ## 依存関係
 
-- `requirements.txt` 参照 (DuckDB を含む)
+- 各サブプロジェクト (`src/*`) の `pyproject.toml` で定義。
+- ルートの `pyproject.toml` でワークスペース (`[tool.uv.workspace]`) を定義し、`uv sync` で管理。
+- `uv.lock` ファイルで依存関係のバージョンを固定。
 - DuckDB VSS 拡張 (DuckDB 内部で管理)
 
 ## ツール利用パターン
 
-- (ここで開発に使用するツールとその使い方の方針を記述)
-- 例: VSCode + Cline, Git for version control
+- VSCode + Cline
+- Git for version control
+- `uv` for dependency management and task running (`uv run`)

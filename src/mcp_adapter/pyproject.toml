@@ -1,0 +1,24 @@
+# src/mcp_adapter/pyproject.toml
+[build-system]
+requires = ["setuptools>=65.5", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mcp_adapter"
+version = "0.1.0"
+description = "MCP adapter for RAG system"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pydantic-settings",
+    "httpx",
+    "mcp[cli]",
+    "rag_core",
+    "rag_api_server",
+]
+
+[tool.setuptools]
+packages = ["mcp_adapter"]
+include-package-data = true
