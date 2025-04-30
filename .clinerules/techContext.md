@@ -31,5 +31,4 @@
 - VSCode + Cline
 - Git for version control
 - `uv` for dependency management and task running (`uv run`)
-- GitHub Actions (CI用)
 - Dependabot (依存関係更新用)
