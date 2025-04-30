@@ -30,6 +30,8 @@
 
 ## What's Left to Build
 
+-   **CI/CD (GitHub Actions) の設定**
+-   **Dependabot の設定**
 -   `mcp_adapter` の MCP サーバーロジック実装:
     - MCPサーバーの基本構造の実装
     - `rag_api_server` との連携機能
@@ -47,6 +49,7 @@
     -   API の基本機能（ヘルスチェック、ドキュメント登録、検索）が正常に動作。
     -   SwaggerUI (`uv run` で起動) でのAPI確認が可能。
     -   ルート `README.md` に詳細な利用手順を記載済み。
+-   **現在のタスクは CI/CD (GitHub Actions) と Dependabot の設定。**
 -   次のステップは `mcp_adapter` の実装開始。
 
 ## Known Issues
