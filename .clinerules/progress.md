@@ -27,11 +27,11 @@
     -   主要な API エンドポイント (`GET /`, `POST /documents/`, `POST /search/`) の正常動作を確認。
 -   **プロジェクトルート `README.md` の更新:**
     -   **`uv` ベースのセットアップ手順、サーバー起動方法 (`uv run`)、API 仕様、使用例、プロジェクト構成図、開発コマンド、ハマりポイントなどを詳細化。**
+-   **Dependabot の設定完了 (`uv` エコシステム利用)。**
 
 ## What's Left to Build
 
--   **CI/CD (GitHub Actions) の設定**
--   **Dependabot の設定**
+-   **README.md の本格的なテコ入れ**
 -   `mcp_adapter` の MCP サーバーロジック実装:
     - MCPサーバーの基本構造の実装
     - `rag_api_server` との連携機能
@@ -49,7 +49,7 @@
     -   API の基本機能（ヘルスチェック、ドキュメント登録、検索）が正常に動作。
     -   SwaggerUI (`uv run` で起動) でのAPI確認が可能。
     -   ルート `README.md` に詳細な利用手順を記載済み。
--   **現在のタスクは CI/CD (GitHub Actions) と Dependabot の設定。**
+-   **現在のタスクは README.md の本格的なテコ入れ。**
 -   次のステップは `mcp_adapter` の実装開始。
 
 ## Known Issues
