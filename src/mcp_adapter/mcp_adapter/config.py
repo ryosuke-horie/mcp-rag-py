@@ -1,23 +1,32 @@
-"""MCP Adapter configuration module."""
+"""設定モジュール"""
+
+import os
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    """MCP Adapter settings."""
+    """アプリケーション設定"""
 
-    model_config = SettingsConfigDict(env_prefix="MCP_ADAPTER_", env_file=".env")
-
-    # MCP server settings
-    server_name: str = "RAG MCP Adapter"
-
-    # RAG API Server settings
+    # RAG APIサーバーの設定
     rag_api_base_url: str = "http://localhost:8000"
 
-    # Server settings
-    host: str = "localhost"
-    port: int = 8080
-    log_level: str = "info"
+    # サーバーの設定
+    host: str = "0.0.0.0"
+    port: int = 8001
+
+    # ログ設定
+    log_level: str = "INFO"
+    log_file: str | None = None
+
+    # モデル設定
+    model_config = SettingsConfigDict(
+        env_file=os.path.join(Path(__file__).parent.parent.parent, ".env"),
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
 
 
+# グローバル設定インスタンス
 settings = Settings()

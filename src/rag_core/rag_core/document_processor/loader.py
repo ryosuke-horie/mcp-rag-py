@@ -48,38 +48,16 @@ def load_documents(
         directory_path,
         glob=glob_pattern,
         use_multithreading=use_multithreading,
-        show_progress=show_progress,
         max_concurrency=max_concurrency,
-        # LangChain の DirectoryLoader は loader_cls か silent_errors を期待するが、
-        # 内部的に glob と拡張子でファイルを処理するため、
-        # ここでは loader_mapping を直接使う形にはなっていない。
-        # 代わりに、glob で取得したファイルパスに対して拡張子を見て適切なローダーを適用する
-        # 必要があるかもしれないが、まずは DirectoryLoader のデフォルト挙動に任せる。
-        # TextLoader がデフォルトで使われることを期待。
-        # -> DirectoryLoader の実装を確認したところ、glob でファイルリストを取得し、
-        #    各ファイルに対して loader_cls を適用する仕組み。
-        #    特定の拡張子ごとに異なるローダーを使うには DirectoryLoader を拡張するか、
-        #    自前でファイルリストを取得してループ処理する必要がある。
-        #    ここではシンプルに TextLoader をデフォルトとして .txt と .md を処理させる。
-        #    より厳密な拡張子別処理が必要な場合は DirectoryLoader を使わず自前実装を検討。
-        #
-        # 再考: DirectoryLoader は glob で指定したパターンに一致するファイル *全て* を
-        # loader_cls (デフォルトは UnstructuredLoader, 指定すれば TextLoader など) で
-        # 読み込もうとする。拡張子ごとの振り分けは DirectoryLoader 自体にはない。
-        # そのため、.txt と .md のみを対象とするには glob を調整するか、
-        # 読み込み後にフィルタリングする必要がある。
-        # ここでは glob で指定し、TextLoader を使う方針とする。
-        loader_cls=TextLoader,
+        show_progress=show_progress,
         loader_kwargs={"encoding": "utf-8"},
-        silent_errors=True,  # エラーが発生しても処理を続ける
+        silent_errors=True,
     )
 
-    print(f"Loading documents from: {directory_path} using glob: {glob_pattern}")
+    print(f"ドキュメントを読み込み中: {directory_path} (glob: {glob_pattern})")
     docs = loader.load()
-    print(f"Loaded {len(docs)} documents.")
+    print(f"読み込み完了: {len(docs)}個のドキュメント")
 
-    # 念のため、意図しないファイルが読み込まれていないか拡張子でフィルタリング
-    # (DirectoryLoader が glob でフィルタしてくれるはずだが、安全のため)
     allowed_extensions = tuple(loaders_to_use.keys())
     filtered_docs = [
         doc
@@ -88,7 +66,7 @@ def load_documents(
         and doc.metadata["source"].endswith(allowed_extensions)
     ]
     print(
-        f"Filtered down to {len(filtered_docs)} documents with extensions: {allowed_extensions}"
+        f"拡張子でフィルタリング後: {len(filtered_docs)}個のドキュメント (拡張子: {allowed_extensions})"
     )
 
     return filtered_docs

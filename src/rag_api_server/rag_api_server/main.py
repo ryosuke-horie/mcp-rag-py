@@ -21,14 +21,14 @@ async def lifespan(app: FastAPI):
     # アプリケーション起動時の処理
     global rag_core
     rag_core = RAGCore()
-    print("RAGCore initialized.")
+    print("RAGCoreの初期化が完了しました。")
 
     yield
 
     # アプリケーション終了時の処理
     if rag_core:
         rag_core.close()
-        print("RAGCore resources released.")
+        print("RAGCoreのリソースを解放しました。")
 
 
 app = FastAPI(
@@ -43,18 +43,22 @@ app = FastAPI(
 async def validation_exception_handler(request, exc):
     return JSONResponse(
         status_code=422,
-        content={
-            "message": "Request validation failed",
-            "errors": exc.errors(),
-            "body": exc.body,  # 送られてきた生ボディ
-        },
+        content={"detail": "リクエストの検証に失敗しました", "errors": exc.errors()},
+    )
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request, exc):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
     )
 
 
 # CORS設定
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 本番環境では適切に制限する
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,32 +75,53 @@ class DocumentRequest(BaseModel):
     )
 
 
-class SearchRequest(BaseModel):
-    query: str = Field(..., description="検索クエリ")
-    top_k: int = Field(default=5, ge=1, le=100, description="返す結果の最大数")
-
-
-class SearchResult(BaseModel):
-    text: str = Field(..., description="検索結果のテキスト")
-    similarity: float = Field(..., description="クエリとの類似度スコア")
-
-
-class SearchResponse(BaseModel):
-    results: list[SearchResult] = Field(..., description="検索結果のリスト")
-
-
 class ContentRequest(BaseModel):
-    content: str = Field(..., description="登録したいテキストコンテンツ")
+    content: str = Field(..., description="処理対象のテキストコンテンツ")
     metadata: dict[str, Any] | None = Field(
-        default=None, description="コンテンツに関する追加情報 (例: source_url)"
+        default=None, description="コンテンツに関連するメタデータ"
     )
 
 
-class ContentResponse(BaseModel):
-    status: str = Field(..., description="処理ステータス ('success' または 'error')")
-    message: str = Field(..., description="処理結果のメッセージ")
-    processed_chunks: int | None = Field(
-        default=None, description="処理されたチャンク数"
+class QueryRequest(BaseModel):
+    query: str = Field(..., description="検索クエリのテキスト")
+    k: int = Field(default=4, description="返却する類似ドキュメントの数")
+    filter_criteria: dict[str, Any] | None = Field(
+        default=None, description="検索結果をフィルタリングするための条件"
+    )
+
+
+# APIエンドポイント
+@app.post("/process-directory")
+async def process_directory(request: DocumentRequest) -> dict[str, Any]:
+    """
+    指定されたディレクトリ内のドキュメントを処理し、ベクトルDBに保存する
+    """
+    if not rag_core:
+        raise HTTPException(status_code=500, detail="RAGCoreが初期化されていません")
+    return await rag_core.process_directory(
+        request.source_path, glob_pattern=request.glob_pattern
+    )
+
+
+@app.post("/add-content")
+async def add_content(request: ContentRequest) -> dict[str, Any]:
+    """
+    単一のテキストコンテンツを処理し、ベクトルDBに保存する
+    """
+    if not rag_core:
+        raise HTTPException(status_code=500, detail="RAGCoreが初期化されていません")
+    return await rag_core.add_single_content(request.content, metadata=request.metadata)
+
+
+@app.post("/query")
+async def query(request: QueryRequest) -> dict[str, Any]:
+    """
+    クエリに対して類似ドキュメントを検索する
+    """
+    if not rag_core:
+        raise HTTPException(status_code=500, detail="RAGCoreが初期化されていません")
+    return await rag_core.query(
+        request.query, k=request.k, filter_criteria=request.filter_criteria
     )
 
 
@@ -107,71 +132,3 @@ async def root():
     APIサーバーの状態を確認するためのヘルスチェックエンドポイント
     """
     return {"status": "healthy", "version": app.version}
-
-
-# ドキュメント処理エンドポイント
-@app.post("/documents/")
-async def create_documents(request: DocumentRequest) -> dict[str, Any]:
-    """
-    指定されたパスのドキュメントを処理し、ベクトルDBに保存します。
-    """
-    if not rag_core:
-        raise HTTPException(status_code=500, detail="RAGCore is not initialized")
-
-    result = await rag_core.process_directory(
-        directory_path=request.source_path, glob_pattern=request.glob_pattern
-    )
-
-    if result["status"] == "error":
-        raise HTTPException(status_code=400, detail=result["message"])
-
-    return result
-
-
-# 検索エンドポイント
-@app.post("/search/", response_model=SearchResponse)
-async def search_documents(request: SearchRequest) -> SearchResponse:
-    """
-    指定されたクエリに基づいて関連ドキュメントを検索します。
-    """
-    if not rag_core:
-        raise HTTPException(status_code=500, detail="RAGCore is not initialized")
-
-    try:
-        results = await rag_core.search(query=request.query, top_k=request.top_k)
-        return SearchResponse(
-            results=[
-                SearchResult(text=result["text"], similarity=result["similarity"])
-                for result in results
-            ]
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# コンテンツ登録エンドポイント
-@app.post("/contents/", response_model=ContentResponse)
-async def add_content(request: ContentRequest) -> ContentResponse:
-    """
-    指定されたテキストコンテンツを処理し、ベクトルDBに保存します。
-    コンテンツはチャンク化されてから保存されます。
-    """
-    if not rag_core:
-        raise HTTPException(status_code=500, detail="RAGCore is not initialized")
-
-    try:
-        result = await rag_core.add_single_content(
-            content=request.content, metadata=request.metadata
-        )
-        if result["status"] == "error":
-            # エラーの場合は processed_chunks を含めない
-            return ContentResponse(status="error", message=result["message"])
-        else:
-            return ContentResponse(
-                status="success",
-                message=result["message"],
-                processed_chunks=result.get("processed_chunks"),  # エラー時はNoneになる
-            )
-    except Exception as e:
-        # 予期せぬエラー
-        raise HTTPException(status_code=500, detail=f"Error adding content: {str(e)}")

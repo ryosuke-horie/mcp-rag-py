@@ -1,4 +1,4 @@
-"""RAG API Server client module."""
+"""RAG APIサーバーのクライアントモジュール"""
 
 import os
 import sys
@@ -14,25 +14,25 @@ from mcp_adapter.config import settings
 
 
 class RAGApiClient:
-    """Client for the RAG API Server."""
+    """RAG APIサーバーのクライアント"""
 
     def __init__(self, base_url: str | None = None):
-        """Initialize the RAG API client.
+        """RAG APIクライアントを初期化する
 
         Args:
-            base_url: Base URL of the RAG API Server. Defaults to the configured URL.
+            base_url: RAG APIサーバーのベースURL。指定しない場合は設定値を使用
         """
         self.base_url = base_url or settings.rag_api_base_url
 
     async def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
-        """Search for documents matching the query.
+        """クエリに一致するドキュメントを検索する
 
         Args:
-            query: The search query.
-            top_k: Number of results to return.
+            query: 検索クエリ
+            top_k: 返却する結果の数
 
         Returns:
-            List of matching documents with their metadata and similarity scores.
+            メタデータと類似度スコアを含む一致ドキュメントのリスト
         """
         url = f"{self.base_url}/search/"
         data = {"query": query, "top_k": top_k}
@@ -40,36 +40,35 @@ class RAGApiClient:
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=data)
             response.raise_for_status()
-            # searchの結果は {"results": [...]} の形式なので、それをそのまま返す
             return response.json()
 
     async def add_content(
         self, content: str, metadata: dict[str, Any] | None = None
     ) -> dict[str, Any]:
-        """Add text content to the RAG system via the /contents/ endpoint.
+        """RAGシステムにテキストコンテンツを追加する
 
         Args:
-            content: The text content to add.
-            metadata: Optional metadata associated with the content.
+            content: 追加するテキストコンテンツ
+            metadata: コンテンツに関連するメタデータ（オプション）
 
         Returns:
-            The response from the RAG API server (e.g., status, message, processed_chunks).
+            RAG APIサーバーからのレスポンス（ステータス、メッセージ、処理されたチャンク数など）
         """
-        url = f"{self.base_url}/contents/"  # 新しいエンドポイントに変更
+        url = f"{self.base_url}/contents/"
         data = {"content": content}
         if metadata:
-            data["metadata"] = metadata  # metadataも送信
+            data["metadata"] = metadata
 
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=data)
-            response.raise_for_status()  # エラーがあれば例外発生
-            return response.json()  # APIからのレスポンスをそのまま返す
+            response.raise_for_status()
+            return response.json()
 
     async def health_check(self) -> dict[str, Any]:
-        """Check if the RAG API Server is healthy.
+        """RAG APIサーバーの状態を確認する
 
         Returns:
-            Health status information.
+            ヘルスステータス情報
         """
         url = f"{self.base_url}/"
 
@@ -79,5 +78,5 @@ class RAGApiClient:
             return response.json()
 
 
-# Create a default client instance
+# デフォルトのクライアントインスタンスを作成
 rag_client = RAGApiClient()

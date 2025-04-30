@@ -1,3 +1,3 @@
-"""MCP adapter for RAG system."""
+"""RAGシステム用のMCPアダプター"""
 
 __version__ = "0.1.0"

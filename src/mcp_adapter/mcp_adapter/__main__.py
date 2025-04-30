@@ -1,4 +1,4 @@
-"""MCP adapter package entry point."""
+"""MCPアダプターパッケージのエントリーポイント"""
 
 from .main import main
 

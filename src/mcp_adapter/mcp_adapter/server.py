@@ -1,4 +1,4 @@
-"""MCP server implementation for the RAG system."""
+"""RAGシステム用のMCPサーバー実装"""
 
 import logging
 import os
@@ -13,54 +13,52 @@ from mcp.server.fastmcp import Context, FastMCP
 from mcp_adapter.client import rag_client
 from mcp_adapter.config import settings
 
-# Configure logging
+# ロギングの設定
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper()),
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger("mcp_adapter")
 
-# Create MCP server
+# MCPサーバーの作成
 mcp = FastMCP(settings.server_name)
 
 
 @mcp.tool()
 async def search_documents(query: str, top_k: int = 5, ctx: Context = None) -> str:
-    """Search for relevant documents based on the query.
+    """クエリに基づいて関連ドキュメントを検索する
 
     Args:
-        query: The search query.
-        top_k: Number of top results to return (default: 5).
-        ctx: MCP context (auto-injected).
+        query: 検索クエリ
+        top_k: 返却する上位結果の数（デフォルト: 5）
+        ctx: MCPコンテキスト（自動注入）
 
     Returns:
-        Formatted string with search results.
+        検索結果を含むフォーマット済み文字列
     """
     if ctx:
-        ctx.info(f"Searching for: {query}")
+        ctx.info(f"検索中: {query}")
 
     try:
-        # rag_client.search は {"results": [...]} を返す想定
         response_data = await rag_client.search(query, top_k)
-        results = response_data.get("results", [])  # resultsキーからリストを取得
+        results = response_data.get("results", [])
 
         if not results:
-            return "No relevant documents found."
+            return "関連するドキュメントが見つかりませんでした。"
 
-        formatted_results = "## Search Results\n\n"
-        # results は [{'text': '...', 'similarity': 0.9}, ...] の形式
+        formatted_results = "## 検索結果\n\n"
         for i, result in enumerate(results, 1):
-            text = result.get("text", "No content available")
+            text = result.get("text", "コンテンツが利用できません")
             similarity = result.get("similarity", 0.0)
             formatted_results += (
-                f"### Result {i} (Similarity: {similarity:.4f})\n\n{text}\n\n"
+                f"### 結果 {i} (類似度: {similarity:.4f})\n\n{text}\n\n"
             )
 
         return formatted_results
 
     except Exception as e:
-        logger.error(f"Error searching documents: {e}")
-        return f"Error searching documents: {str(e)}"
+        logger.error(f"ドキュメント検索エラー: {e}")
+        return f"ドキュメント検索エラー: {str(e)}"
 
 
 @mcp.tool()
@@ -70,77 +68,74 @@ async def add_content(
     source_url: str | None = None,
     ctx: Context = None,
 ) -> str:
-    """Add text content to the RAG system. The content will be chunked and embedded.
+    """RAGシステムにテキストコンテンツを追加する。コンテンツはチャンク化され、埋め込みが生成される。
 
     Args:
-        content: The text content to add.
-        source_description: Optional description of the content's source (e.g., "Brave Search result").
-        source_url: Optional URL of the content's source.
-        ctx: MCP context (auto-injected).
+        content: 追加するテキストコンテンツ
+        source_description: コンテンツのソースの説明（オプション）
+        source_url: コンテンツのソースURL（オプション）
+        ctx: MCPコンテキスト（自動注入）
 
     Returns:
-        Status message about the content addition.
+        コンテンツ追加に関するステータスメッセージ
     """
     if ctx:
-        ctx.info(f"Adding content (Source: {source_description or 'Unknown'})")
+        ctx.info(f"コンテンツ追加中 (ソース: {source_description or '不明'})")
 
     try:
-        # メタデータを作成 (APIが受け取る形式に合わせる)
         metadata = {}
         if source_description:
             metadata["source_description"] = source_description
         if source_url:
             metadata["source_url"] = source_url
 
-        # rag_client.add_content を呼び出す (metadataが空辞書でもOK)
         result = await rag_client.add_content(content, metadata if metadata else None)
 
-        # APIからのレスポンスに基づいてメッセージを生成
         if result.get("status") == "success":
             processed_chunks = result.get("processed_chunks", "N/A")
-            return f"Content added successfully. Processed {processed_chunks} chunks."
+            return f"コンテンツが正常に追加されました。{processed_chunks}個のチャンクを処理しました。"
         else:
-            error_message = result.get("message", "Unknown error")
-            return f"Failed to add content: {error_message}"
+            error_message = result.get("message", "不明なエラー")
+            return f"コンテンツの追加に失敗しました: {error_message}"
 
     except Exception as e:
-        logger.error(f"Error adding content: {e}")
-        return f"Error adding content: {str(e)}"
+        logger.error(f"コンテンツ追加エラー: {e}")
+        return f"コンテンツ追加エラー: {str(e)}"
 
 
 @mcp.tool()
 async def check_rag_status(ctx: Context = None) -> str:
-    """Check the status of the RAG API Server.
+    """RAG APIサーバーの状態を確認する
 
     Args:
-        ctx: MCP context (auto-injected).
+        ctx: MCPコンテキスト（自動注入）
 
     Returns:
-        Status information about the RAG API Server.
+        RAG APIサーバーの状態情報
     """
     if ctx:
-        ctx.info("Checking RAG API Server status")
+        ctx.info("RAG APIサーバーの状態を確認中")
 
     try:
         status = await rag_client.health_check()
-        return f"RAG API Server is operational: {status}"
+        return f"RAG APIサーバーは動作中です: {status}"
 
     except Exception as e:
-        logger.error(f"Error checking RAG API Server status: {e}")
-        return f"RAG API Server appears to be unavailable: {str(e)}"
+        logger.error(f"RAG APIサーバーの状態確認エラー: {e}")
+        return f"RAG APIサーバーは利用できないようです: {str(e)}"
 
 
 @mcp.resource("rag-info://status")
 async def get_rag_status() -> str:
-    """Get the current status of the RAG system.
+    """RAGシステムの現在の状態を取得する
 
     Returns:
-        Formatted string with RAG system status information.
+        RAGシステムの状態情報を含むフォーマット済み文字列
     """
     try:
         status = await rag_client.health_check()
-        return f"# RAG System Status\n\n- Status: Online\n- Version: {status.get('version', 'Unknown')}\n- API Endpoint: {settings.rag_api_base_url}"
+        return f"# RAGシステムの状態\n\n- 状態: オンライン\n- バージョン: {status.get('version', '不明')}\n- APIエンドポイント: {settings.rag_api_base_url}"
 
     except Exception as e:
-        logger.error(f"Error getting RAG system status: {e}")
-        return "# RAG System Status\n\n- Status: Offline\n- Error: Unable to connect to RAG API Server"
+        logger.error(f"RAGシステムの状態取得エラー: {e}")
+        return "# RAGシステムの状態\n\n- 状態: オフライン\n- エラー: RAG APIサーバーに接続できません"
