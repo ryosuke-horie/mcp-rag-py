@@ -10,10 +10,10 @@ class Settings(BaseSettings):
 
     # MCP server settings
     server_name: str = "RAG MCP Adapter"
-    
+
     # RAG API Server settings
     rag_api_base_url: str = "http://localhost:8000"
-    
+
     # Server settings
     host: str = "localhost"
     port: int = 8080

@@ -1,23 +1,25 @@
 # rag_core/document_processor/loader.py
+import os
+from collections.abc import Callable
+
 from langchain_community.document_loaders import DirectoryLoader, TextLoader
 from langchain_core.documents import Document
-from typing import List, Optional, Dict, Callable
-import os
 
 # .txt と .md ファイルを読み込むためのローダー設定
-DEFAULT_LOADERS: Dict[str, Callable] = {
+DEFAULT_LOADERS: dict[str, Callable] = {
     ".txt": lambda path: TextLoader(path, encoding="utf-8"),
     ".md": lambda path: TextLoader(path, encoding="utf-8"),
 }
 
+
 def load_documents(
     directory_path: str,
     glob_pattern: str = "**/*",
-    custom_loaders: Optional[Dict[str, Callable]] = None,
+    custom_loaders: dict[str, Callable] | None = None,
     show_progress: bool = False,
     use_multithreading: bool = False,
-    max_concurrency: Optional[int] = None,
-) -> List[Document]:
+    max_concurrency: int | None = None,
+) -> list[Document]:
     """
     指定されたディレクトリからドキュメントを読み込みます。
     デフォルトでは .txt と .md ファイルを対象とします。
@@ -36,15 +38,11 @@ def load_documents(
         読み込まれたドキュメントのリスト。
     """
     if not os.path.isdir(directory_path):
-        raise ValueError(f"指定されたパスはディレクトリではありません: {directory_path}")
+        raise ValueError(
+            f"指定されたパスはディレクトリではありません: {directory_path}"
+        )
 
     loaders_to_use = custom_loaders if custom_loaders is not None else DEFAULT_LOADERS
-
-    # DirectoryLoaderに渡すローダーのマッピングを作成
-    loader_mapping = {
-        ext: loader_func
-        for ext, loader_func in loaders_to_use.items()
-    }
 
     loader = DirectoryLoader(
         directory_path,
@@ -72,8 +70,8 @@ def load_documents(
         # 読み込み後にフィルタリングする必要がある。
         # ここでは glob で指定し、TextLoader を使う方針とする。
         loader_cls=TextLoader,
-        loader_kwargs={'encoding': 'utf-8'},
-        silent_errors=True, # エラーが発生しても処理を続ける
+        loader_kwargs={"encoding": "utf-8"},
+        silent_errors=True,  # エラーが発生しても処理を続ける
     )
 
     print(f"Loading documents from: {directory_path} using glob: {glob_pattern}")
@@ -84,15 +82,19 @@ def load_documents(
     # (DirectoryLoader が glob でフィルタしてくれるはずだが、安全のため)
     allowed_extensions = tuple(loaders_to_use.keys())
     filtered_docs = [
-        doc for doc in docs
-        if 'source' in doc.metadata and doc.metadata['source'].endswith(allowed_extensions)
+        doc
+        for doc in docs
+        if "source" in doc.metadata
+        and doc.metadata["source"].endswith(allowed_extensions)
     ]
-    print(f"Filtered down to {len(filtered_docs)} documents with extensions: {allowed_extensions}")
-
+    print(
+        f"Filtered down to {len(filtered_docs)} documents with extensions: {allowed_extensions}"
+    )
 
     return filtered_docs
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # テスト用のディレクトリとファイルを作成 (カレントディレクトリに作成)
     TEST_DIR = "temp_docs_for_loader_test"
     os.makedirs(os.path.join(TEST_DIR, "subdir"), exist_ok=True)
@@ -103,16 +105,18 @@ if __name__ == '__main__':
     with open(os.path.join(TEST_DIR, "subdir", "doc3.txt"), "w", encoding="utf-8") as f:
         f.write("サブディレクトリ内のドキュメント。")
     with open(os.path.join(TEST_DIR, "other.log"), "w", encoding="utf-8") as f:
-        f.write("これはログファイルです。") # これは読み込まれないはず
+        f.write("これはログファイルです。")  # これは読み込まれないはず
 
     print(f"--- Running loader test in '{TEST_DIR}' ---")
     try:
         # デフォルト (.txt, .md) の読み込みテスト
-        loaded_docs = load_documents(TEST_DIR, glob_pattern="**/*[.md|.txt]") # globで拡張子を指定
+        loaded_docs = load_documents(
+            TEST_DIR, glob_pattern="**/*[.md|.txt]"
+        )  # globで拡張子を指定
         print("\n--- Loaded Documents (Default) ---")
         for doc in loaded_docs:
             print(f"Source: {doc.metadata.get('source', 'N/A')}")
-            print(f"Content: {doc.page_content[:50]}...") # 最初の50文字表示
+            print(f"Content: {doc.page_content[:50]}...")  # 最初の50文字表示
             print("-" * 10)
 
         # 想定: doc1.txt, doc2.md, doc3.txt の3つが読み込まれる
@@ -122,6 +126,7 @@ if __name__ == '__main__':
     finally:
         # テスト用ディレクトリとファイルを削除
         import shutil
+
         if os.path.exists(TEST_DIR):
             shutil.rmtree(TEST_DIR)
             print(f"\n--- Cleaned up test directory '{TEST_DIR}' ---")

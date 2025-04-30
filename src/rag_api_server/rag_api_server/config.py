@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings
-from typing import Optional
+
 
 class Settings(BaseSettings):
     """APIサーバーの設定"""
@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     # 環境変数のプレフィックス
     class Config:
         env_prefix = "RAG_"
+
 
 # グローバル設定インスタンス
 settings = Settings()

@@ -1,11 +1,12 @@
 # Embedding model implementation using Ollama
-from langchain_ollama import OllamaEmbeddings # Updated import
 import os
-from typing import List
+
+from langchain_ollama import OllamaEmbeddings  # Updated import
+
 
 def initialize_embedding_model(
     ollama_base_url: str = os.environ.get("OLLAMA_BASE_URL", "http://localhost:11434"),
-    model_name: str = os.environ.get("EMBEDDING_MODEL_NAME", "bge-m3")
+    model_name: str = os.environ.get("EMBEDDING_MODEL_NAME", "bge-m3"),
 ) -> OllamaEmbeddings:
     """
     Initializes and returns the Ollama embedding model instance.
@@ -22,11 +23,14 @@ def initialize_embedding_model(
     Returns:
         OllamaEmbeddings: An instance of the Ollama embedding model.
     """
-    print(f"Initializing Ollama Embeddings with base_url='{ollama_base_url}' and model='{model_name}'")
+    print(
+        f"Initializing Ollama Embeddings with base_url='{ollama_base_url}' and model='{model_name}'"
+    )
     embeddings = OllamaEmbeddings(base_url=ollama_base_url, model=model_name)
     return embeddings
 
-def embed_texts(texts: List[str], embeddings: OllamaEmbeddings) -> List[List[float]]:
+
+def embed_texts(texts: list[str], embeddings: OllamaEmbeddings) -> list[list[float]]:
     """
     Embeds a list of texts using the provided Ollama embedding model.
 
@@ -42,7 +46,8 @@ def embed_texts(texts: List[str], embeddings: OllamaEmbeddings) -> List[List[flo
     print("Embedding complete.")
     return embedded_vectors
 
-def embed_query(text: str, embeddings: OllamaEmbeddings) -> List[float]:
+
+def embed_query(text: str, embeddings: OllamaEmbeddings) -> list[float]:
     """
     Embeds a single query text using the provided Ollama embedding model.
 
@@ -53,13 +58,14 @@ def embed_query(text: str, embeddings: OllamaEmbeddings) -> List[float]:
     Returns:
         List[float]: The embedding vector for the input query text.
     """
-    print(f"Embedding query: '{text[:50]}...'") # Log first 50 chars
+    print(f"Embedding query: '{text[:50]}...'")  # Log first 50 chars
     embedded_vector = embeddings.embed_query(text)
     print("Query embedding complete.")
     return embedded_vector
 
+
 # Example usage (optional, for testing purposes)
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Ensure Ollama server is running and the model is available
     # Example: ollama run bge-m3
 
@@ -94,7 +100,9 @@ if __name__ == '__main__':
         print("\n--- Embedding Test Successful ---")
 
     except Exception as e:
-        print(f"\n--- Embedding Test Failed ---")
+        print("\n--- Embedding Test Failed ---")
         print(f"An error occurred: {e}")
-        print("Please ensure the Ollama server is running and the specified model ('bge-m3' by default) is available.")
+        print(
+            "Please ensure the Ollama server is running and the specified model ('bge-m3' by default) is available."
+        )
         print("You might need to run 'ollama run bge-m3' in your terminal.")
