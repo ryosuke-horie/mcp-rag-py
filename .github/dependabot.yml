@@ -1,0 +1,45 @@
+version: 2
+updates:
+  # Maintain dependencies for uv (Python)
+  - package-ecosystem: "uv"
+    directory: "/" # Check root pyproject.toml and uv.lock
+    schedule:
+      interval: "daily"
+    # Group uv updates together
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+
+  - package-ecosystem: "uv"
+    directory: "/src/rag_core" # Check rag_core subproject
+    schedule:
+      interval: "daily"
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+
+  - package-ecosystem: "uv"
+    directory: "/src/rag_api_server" # Check rag_api_server subproject
+    schedule:
+      interval: "daily"
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+
+  - package-ecosystem: "uv"
+    directory: "/src/mcp_adapter" # Check mcp_adapter subproject
+    schedule:
+      interval: "daily"
+    groups:
+      python-dependencies:
+        patterns: ["*"]
+
+  # Maintain dependencies for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/" # Check workflows in .github/workflows
+    schedule:
+      interval: "daily"
+    # Group GitHub Actions updates together
+    groups:
+      github-actions:
+        patterns: ["*"]

@@ -5,7 +5,7 @@
 -   `uv` を利用したモノレポ構成への移行完了。
 -   `rag_api_server` の動作検証完了済み。
 -   プロジェクトルートの `README.md` を `uv` ベースの開発フローに合わせて更新済み。
--   次のステップとして、`mcp_adapter` の実装を開始する (`uv` 環境下で)。
+-   **CI/CD (GitHub Actions) と Dependabot の設定。**
 
 ## Recent Changes
 
@@ -17,7 +17,14 @@
 
 ## Next Steps
 
-1.  `mcp_adapter` の実装を開始する:
-    -   MCPサーバーのスケルトンコード作成
-    -   `rag_api_server` との連携実装
-    -   MCPツールとリソースの定義
+1.  **CI (GitHub Actions) の設定:**
+    -   `.github/workflows/ci.yml` を作成。
+    -   `push` (main) および `pull_request` トリガーを設定。
+    -   Python 3.11, `uv` のセットアップジョブを定義。
+    -   `uv sync` による依存関係インストールステップを追加。
+    -   `pre-commit run --all-files` によるリンター/フォーマッター実行ステップを追加。
+2.  **Dependabot の設定:**
+    -   `.github/dependabot.yml` を作成。
+    -   `pip` (ルートおよびサブプロジェクト) と `github-actions` のエコシステムを設定。
+    -   更新スケジュールを `daily` に設定。
+3.  `mcp_adapter` の実装を開始する (`uv` 環境下で)。
