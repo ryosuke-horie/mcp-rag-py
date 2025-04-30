@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any
 
-from langchain_core.documents import Document  # Documentを追加
+from langchain_core.documents import Document
 
 from rag_core.document_processor.loader import load_documents
 from rag_core.document_processor.splitter import split_documents
@@ -35,7 +35,7 @@ class RAGCore:
         self.vector_store = DuckDBVectorStore(
             db_path=settings.db_path, table_name=settings.table_name
         )
-        print("RAGCore initialized successfully.")
+        print("RAGCoreの初期化が完了しました。")
 
     async def process_directory(
         self, directory_path: str, glob_pattern: str = "**/*[.md|.txt]"
@@ -54,83 +54,91 @@ class RAGCore:
             # ディレクトリパスの正規化
             dir_path = Path(directory_path).resolve()
             if not dir_path.is_dir():
-                raise ValueError(f"Invalid directory path: {directory_path}")
+                raise ValueError(f"無効なディレクトリパス: {directory_path}")
 
             # ドキュメントの読み込み
-            print(f"Loading documents from {dir_path}...")
+            print(f"ドキュメントを読み込み中: {dir_path}...")
             documents = load_documents(str(dir_path), glob_pattern=glob_pattern)
             if not documents:
                 return {
                     "status": "no_documents",
-                    "message": "No documents found in the specified directory",
+                    "message": "指定されたディレクトリにドキュメントが見つかりません",
                 }
 
             # ドキュメントの分割
-            print("Splitting documents into chunks...")
+            print("ドキュメントをチャンクに分割中...")
             chunks = split_documents(documents)
             if not chunks:
                 return {
                     "status": "no_chunks",
-                    "message": "No chunks created from the documents",
+                    "message": "ドキュメントからチャンクが生成されませんでした",
                 }
 
             # テキストとメタデータの抽出
             texts = [chunk.page_content for chunk in chunks]
 
             # 埋め込みの生成
-            print("Generating embeddings...")
+            print("埋め込みを生成中...")
             embeddings = embed_texts(texts, self.embeddings)
 
             # ベクトルDBへの保存
-            print("Storing embeddings in the vector database...")
+            print("ベクトルDBに保存中...")
             self.vector_store.add_embeddings(texts, embeddings)
 
             return {
                 "status": "success",
                 "processed_documents": len(documents),
                 "processed_chunks": len(chunks),
-                "message": "Documents processed and stored successfully",
+                "message": "ドキュメントの処理が完了しました",
             }
 
         except Exception as e:
-            error_message = f"Error processing documents: {str(e)}"
-            print(error_message)
-            return {"status": "error", "message": error_message}
+            return {
+                "status": "error",
+                "message": f"ドキュメント処理中にエラーが発生しました: {str(e)}",
+            }
 
-    async def search(self, query: str, top_k: int = 5) -> list[dict[str, Any]]:
+    async def query(
+        self, query_text: str, k: int = 4, filter_criteria: dict[str, Any] | None = None
+    ) -> dict[str, Any]:
         """
-        クエリに基づいて関連ドキュメントを検索する
+        クエリに対して類似ドキュメントを検索する
 
         Args:
-            query: 検索クエリ
-            top_k: 返す結果の最大数
+            query_text: 検索クエリのテキスト
+            k: 返却する類似ドキュメントの数
+            filter_criteria: 検索結果をフィルタリングするための条件
 
         Returns:
-            検索結果のリスト。各結果は辞書形式で、テキストと類似度スコアを含む
+            検索結果を含む辞書
         """
         try:
             # クエリの埋め込みを生成
-            query_embedding = embed_query(query, self.embeddings)
+            query_embedding = embed_query(query_text, self.embeddings)
 
-            # 類似度検索の実行
-            results = self.vector_store.similarity_search(query_embedding, k=top_k)
+            # ベクトルDBで類似検索
+            results = self.vector_store.similarity_search(
+                query_embedding, k=k, filter_criteria=filter_criteria
+            )
 
-            # 結果の整形
-            formatted_results = [
-                {
-                    "text": text,
-                    "similarity": float(
-                        score
-                    ),  # np.float32をJSONシリアライズ可能なfloatに変換
-                }
-                for text, score in results
-            ]
-
-            return formatted_results
+            return {
+                "status": "success",
+                "results": [
+                    {
+                        "content": doc.page_content,
+                        "metadata": doc.metadata,
+                        "score": doc.metadata.get("score", 0.0),
+                    }
+                    for doc in results
+                ],
+                "message": "検索が完了しました",
+            }
 
         except Exception as e:
-            print(f"Error during search: {e}")
-            raise
+            return {
+                "status": "error",
+                "message": f"検索中にエラーが発生しました: {str(e)}",
+            }
 
     async def add_single_content(
         self, content: str, metadata: dict[str, Any] | None = None
@@ -147,42 +155,40 @@ class RAGCore:
         """
         try:
             # コンテンツをDocumentオブジェクトに変換
-            # メタデータがない場合は空の辞書を使用
             doc_metadata = metadata if metadata is not None else {}
             document = Document(page_content=content, metadata=doc_metadata)
 
-            # ドキュメントの分割 (単一ドキュメントをリストとして渡す)
-            print("Splitting content into chunks...")
-            chunks = split_documents([document])  # split_documentsはリストを受け取る
+            # ドキュメントの分割
+            print("コンテンツをチャンクに分割中...")
+            chunks = split_documents([document])
             if not chunks:
                 return {
                     "status": "no_chunks",
-                    "message": "No chunks created from the content",
+                    "message": "コンテンツからチャンクが生成されませんでした",
                 }
 
-            # テキストとメタデータの抽出 (現状メタデータはDBに保存しないが、将来のために抽出はしておく)
+            # テキストとメタデータの抽出
             texts = [chunk.page_content for chunk in chunks]
-            # chunk_metadata = [chunk.metadata for chunk in chunks] # 必要に応じて利用
 
             # 埋め込みの生成
-            print("Generating embeddings...")
+            print("埋め込みを生成中...")
             embeddings = embed_texts(texts, self.embeddings)
 
             # ベクトルDBへの保存
-            print("Storing embeddings in the vector database...")
-            # 現状のadd_embeddingsはテキストと埋め込みのみ受け取る
+            print("ベクトルDBに保存中...")
             self.vector_store.add_embeddings(texts, embeddings)
 
             return {
                 "status": "success",
                 "processed_chunks": len(chunks),
-                "message": "Content processed and stored successfully",
+                "message": "コンテンツの処理が完了しました",
             }
 
         except Exception as e:
-            error_message = f"Error processing content: {str(e)}"
-            print(error_message)
-            return {"status": "error", "message": error_message}
+            return {
+                "status": "error",
+                "message": f"コンテンツ処理中にエラーが発生しました: {str(e)}",
+            }
 
     def close(self):
         """リソースの解放"""

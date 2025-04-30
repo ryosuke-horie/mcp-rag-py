@@ -32,7 +32,6 @@ def split_documents(
         分割された Document オブジェクトのリスト。
     """
     if separators is None:
-        # RecursiveCharacterTextSplitter のデフォルトセパレータを使用
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
@@ -53,10 +52,10 @@ def split_documents(
         )
 
     print(
-        f"Splitting {len(documents)} documents into chunks (size={chunk_size}, overlap={chunk_overlap})..."
+        f"ドキュメントを分割中... (チャンクサイズ={chunk_size}, オーバーラップ={chunk_overlap})"
     )
     split_docs = text_splitter.split_documents(documents)
-    print(f"Split into {len(split_docs)} chunks.")
+    print(f"分割完了: {len(split_docs)}個のチャンクに分割されました。")
 
     return split_docs
 
@@ -74,51 +73,36 @@ if __name__ == "__main__":
     チャンクサイズを100、オーバーラップを20としてテストしてみましょう。
     オーバーラップは、チャンク間の文脈を維持するのに役立ちます。
     例えば、前のチャンクの最後の部分が、次のチャンクの最初の部分に含まれます。
-
-    This is a very long test document.
-    It is divided into multiple paragraphs. RecursiveCharacterTextSplitter
-    first tries to split by double newlines (\\n\\n).
-    If it still exceeds the chunk size, it then splits by single newlines (\\n).
-    Then by spaces ( ), and finally by characters ("").
-    This attempts to keep semantically related pieces of text together as much as possible.
-
-    Let's test with a chunk size of 100 and an overlap of 20.
-    Overlap helps maintain context between chunks.
-    For example, the end of the previous chunk is included at the beginning of the next chunk.
     """
         * 5
-    )  # テキストを長くするために5回繰り返す
+    )
 
     dummy_doc = Document(page_content=long_text, metadata={"source": "dummy_test_doc"})
     dummy_docs = [dummy_doc]
 
-    print("--- Running splitter test ---")
+    print("--- 分割テスト開始 ---")
     try:
         # デフォルト設定 (chunk_size=1000, chunk_overlap=200) で分割
-        print("\n--- Splitting with default settings ---")
+        print("\n--- デフォルト設定での分割 ---")
         split_docs_default = split_documents(dummy_docs)
-        print(f"Number of chunks (default): {len(split_docs_default)}")
-        # 最初のチャンクの内容を一部表示
+        print(f"チャンク数 (デフォルト): {len(split_docs_default)}")
         if split_docs_default:
-            print("First chunk (default):")
-            print(f"Source: {split_docs_default[0].metadata.get('source', 'N/A')}")
-            print(f"Content: {split_docs_default[0].page_content[:150]}...")
+            print("最初のチャンク (デフォルト):")
+            print(f"ソース: {split_docs_default[0].metadata.get('source', 'N/A')}")
+            print(f"内容: {split_docs_default[0].page_content[:150]}...")
 
         # カスタム設定 (chunk_size=100, chunk_overlap=20) で分割
-        print("\n--- Splitting with custom settings (size=100, overlap=20) ---")
+        print("\n--- カスタム設定での分割 (サイズ=100, オーバーラップ=20) ---")
         split_docs_custom = split_documents(
             dummy_docs, chunk_size=100, chunk_overlap=20
         )
-        print(f"Number of chunks (custom): {len(split_docs_custom)}")
-        # 最初のチャンクの内容を一部表示
+        print(f"チャンク数 (カスタム): {len(split_docs_custom)}")
         if split_docs_custom:
-            print("First chunk (custom):")
-            print(f"Source: {split_docs_custom[0].metadata.get('source', 'N/A')}")
-            print(
-                f"Content: {split_docs_custom[0].page_content[:150]}..."
-            )  # チャンクサイズが小さいので全体が表示されるかも
+            print("最初のチャンク (カスタム):")
+            print(f"ソース: {split_docs_custom[0].metadata.get('source', 'N/A')}")
+            print(f"内容: {split_docs_custom[0].page_content[:150]}...")
 
     except Exception as e:
-        print(f"An error occurred during testing: {e}")
+        print(f"テスト中にエラーが発生しました: {e}")
     finally:
-        print("\n--- Splitter test finished ---")
+        print("\n--- 分割テスト終了 ---")
