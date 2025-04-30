@@ -1,18 +1,19 @@
 # rag_core/document_processor/splitter.py
-from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 from langchain_core.documents import Document
-from typing import List, Optional
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+
 
 def split_documents(
-    documents: List[Document],
+    documents: list[Document],
     chunk_size: int = 1000,
     chunk_overlap: int = 200,
     length_function: callable = len,
     is_separator_regex: bool = False,
-    separators: Optional[List[str]] = None,
+    separators: list[str] | None = None,
     keep_separator: bool = True,
-    **kwargs
-) -> List[Document]:
+    **kwargs,
+) -> list[Document]:
     """
     与えられたドキュメントリストをチャンクに分割します。
 
@@ -38,7 +39,7 @@ def split_documents(
             length_function=length_function,
             is_separator_regex=is_separator_regex,
             keep_separator=keep_separator,
-            **kwargs
+            **kwargs,
         )
     else:
         text_splitter = RecursiveCharacterTextSplitter(
@@ -48,18 +49,22 @@ def split_documents(
             chunk_overlap=chunk_overlap,
             length_function=length_function,
             is_separator_regex=is_separator_regex,
-            **kwargs
+            **kwargs,
         )
 
-    print(f"Splitting {len(documents)} documents into chunks (size={chunk_size}, overlap={chunk_overlap})...")
+    print(
+        f"Splitting {len(documents)} documents into chunks (size={chunk_size}, overlap={chunk_overlap})..."
+    )
     split_docs = text_splitter.split_documents(documents)
     print(f"Split into {len(split_docs)} chunks.")
 
     return split_docs
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     # テスト用のダミードキュメントを作成
-    long_text = """これは非常に長いテストドキュメントです。
+    long_text = (
+        """これは非常に長いテストドキュメントです。
     複数の段落に分かれています。RecursiveCharacterTextSplitter は、
     まず改行2つ（\\n\\n）で分割しようとします。
     それでもチャンクサイズを超える場合は、次に改行1つ（\\n）で分割します。
@@ -80,7 +85,9 @@ if __name__ == '__main__':
     Let's test with a chunk size of 100 and an overlap of 20.
     Overlap helps maintain context between chunks.
     For example, the end of the previous chunk is included at the beginning of the next chunk.
-    """ * 5 # テキストを長くするために5回繰り返す
+    """
+        * 5
+    )  # テキストを長くするために5回繰り返す
 
     dummy_doc = Document(page_content=long_text, metadata={"source": "dummy_test_doc"})
     dummy_docs = [dummy_doc]
@@ -99,13 +106,17 @@ if __name__ == '__main__':
 
         # カスタム設定 (chunk_size=100, chunk_overlap=20) で分割
         print("\n--- Splitting with custom settings (size=100, overlap=20) ---")
-        split_docs_custom = split_documents(dummy_docs, chunk_size=100, chunk_overlap=20)
+        split_docs_custom = split_documents(
+            dummy_docs, chunk_size=100, chunk_overlap=20
+        )
         print(f"Number of chunks (custom): {len(split_docs_custom)}")
         # 最初のチャンクの内容を一部表示
         if split_docs_custom:
             print("First chunk (custom):")
             print(f"Source: {split_docs_custom[0].metadata.get('source', 'N/A')}")
-            print(f"Content: {split_docs_custom[0].page_content[:150]}...") # チャンクサイズが小さいので全体が表示されるかも
+            print(
+                f"Content: {split_docs_custom[0].page_content[:150]}..."
+            )  # チャンクサイズが小さいので全体が表示されるかも
 
     except Exception as e:
         print(f"An error occurred during testing: {e}")
