@@ -58,8 +58,8 @@ class RAGApiClient:
         Returns:
             サーバーからのJSONレスポンス（'results'キーを含む）
         """
-        url = f"{self.base_url}/search/"
-        data = {"query": query, "top_k": top_k}
+        url = f"{self.base_url}/query"
+        data = {"query": query, "k": top_k}
 
         async with httpx.AsyncClient() as client:
             response = await client.post(url, json=data)
