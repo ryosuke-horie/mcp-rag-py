@@ -1524,6 +1524,7 @@ dependencies = [
     { name = "langchain-ollama" },
     { name = "langchain-text-splitters" },
     { name = "sentence-transformers" },
+    { name = "typer" },
 ]
 
 [package.metadata]
@@ -1534,6 +1535,7 @@ requires-dist = [
     { name = "langchain-ollama", specifier = ">=0.0.23" },
     { name = "langchain-text-splitters" },
     { name = "sentence-transformers" },
+    { name = "typer", extras = ["all"] },
 ]
 
 [[package]]

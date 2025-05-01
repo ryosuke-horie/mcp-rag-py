@@ -14,8 +14,12 @@ dependencies = [
   "langchain-text-splitters",
   "sentence-transformers",
   "duckdb",
+  "typer[all]", # CLIのため追加
 ]
 
 [tool.setuptools]
 packages = ["rag_core"]
 include-package-data = true
+
+[project.scripts]
+rag-core-cli = "rag_core.cli:app"
