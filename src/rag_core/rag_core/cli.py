@@ -51,13 +51,11 @@ def main(
             typer.echo(
                 f"エラー: サポートされていないファイル形式です: {file.suffix}", err=True
             )
-            raise typer.Exit(code=1)  # Corrected indentation
-        # Corrected indentation below
+            raise typer.Exit(code=1)
         typer.echo(f"処理を開始します (ファイル): {file}")
         process_file(file)
         typer.echo(f"ファイルの処理が完了しました: {file}")
 
-    # Corrected indentation below
     if directory:
         typer.echo(f"処理を開始します (ディレクトリ): {directory}")
         process_directory(directory)

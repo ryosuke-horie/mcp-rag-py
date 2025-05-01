@@ -14,7 +14,7 @@ dependencies = [
   "langchain-text-splitters",
   "sentence-transformers",
   "duckdb",
-  "typer[all]", # CLIのため追加
+  "typer[all]",
 ]
 
 [tool.setuptools]
