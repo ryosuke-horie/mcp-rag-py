@@ -5,7 +5,10 @@ build-backend = "uv.build.api"
 [project]
 name = "mcp-rag"
 version = "0.1.0"
-dependencies = ["rag_api_server"]
+dependencies = [
+    "mcp[cli]>=1.6.0",
+    "rag_api_server",
+]
 requires-python = ">=3.11"
 
 [tool.uv]
