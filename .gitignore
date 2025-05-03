@@ -144,3 +144,5 @@ cython_debug/
 # DuckDB database files
 *.db
 *.db.wal
+
+**/.claude/settings.local.json
