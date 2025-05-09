@@ -10,7 +10,7 @@
 
 1. ローカル環境でRAGを構築しMCPで参照できるようにする
 2. RAGにプロジェクト固有の情報を溜め込む（チーム固有のルールや規約、利用する技術の公式ドキュメント情報など）
-3. Claude等のツールからMCPを経由して情報を呼び出し、生成されるコードに改善が見られるか検証する
+3. Claude desktopからMCPを経由して情報を呼び出し、生成されるコードに改善が見られるか検証したい
 
  ### 主な機能
 
@@ -91,14 +91,14 @@ mcp-rag/
 ├─ pyproject.toml               # ルート: uv ワークスペース定義
 ├─ src/
 │  ├─ rag_api_server/           # FastAPI エンドポイント
-│  │  ├─ pyproject.toml         #   src-layout / editable
+│  │  ├─ pyproject.toml
 │  │  └─ rag_api_server/…       #   実装
-│  ├─ rag_core/                 # RAG ロジック（Embedding, VectorDB）
+│  ├─ rag_core/                 # RAG（Embedding, VectorDB）
 │  │  ├─ pyproject.toml
 │  │  └─ rag_core/…
 │  └─ mcp_adapter/              # MCP プロトコルアダプタ
 │     └─ …
-└─ README.md                    # ← いま見ているファイル
+└─ README.md
 ```
 
 ### 各コンポーネントの役割
