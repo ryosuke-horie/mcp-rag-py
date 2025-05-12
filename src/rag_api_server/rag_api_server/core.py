@@ -117,19 +117,20 @@ class RAGCore:
             query_embedding = embed_query(query_text, self.embeddings)
 
             # ベクトルDBで類似検索
-            results = self.vector_store.similarity_search(
-                query_embedding, k=k, filter_criteria=filter_criteria
-            )
+            # filter_criteriaパラメータは使用されていないため削除
+            results = self.vector_store.similarity_search(query_embedding, k=k)
 
+            # 返却結果の構造を修正
+            # vectordb.storage.py の similarity_search メソッドはタプルのリストを返す
+            # 例: [('doc1 text', 0.98), ('doc2 text', 0.95)]
             return {
                 "status": "success",
                 "results": [
                     {
-                        "content": doc.page_content,
-                        "metadata": doc.metadata,
-                        "score": doc.metadata.get("score", 0.0),
+                        "text": text,
+                        "similarity": similarity,
                     }
-                    for doc in results
+                    for text, similarity in results
                 ],
                 "message": "検索が完了しました",
             }
