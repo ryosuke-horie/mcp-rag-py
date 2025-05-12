@@ -78,8 +78,8 @@ class RAGApiClient:
         Returns:
             RAG APIサーバーからのレスポンス
         """
-        url = f"{self.base_url}/contents/"
-        data = {"content": content}
+        url = f"{self.base_url}/add-content"
+        data: dict[str, Any] = {"content": content}
         if metadata:
             data["metadata"] = metadata
 

@@ -14,7 +14,7 @@ flowchart LR
 
     %% 質問・回答フロー
     User -->|質問| Claude
-    Claude -->|MCPアクション呼出| MCP
+    Claude -->|MCPツール呼出| MCP
     MCP -->|API呼出| API
     API -->|検索クエリ送信| Core
     Core -->|クエリベクトル化| Ollama
@@ -28,8 +28,5 @@ flowchart LR
 
     %% ドキュメント登録フロー
     Doc -.-|登録| Core
-    Core -.-|チャンク分割| Core
-    Core -.-|ベクトル化依頼| Ollama
-    Ollama -.-|ベクトル返却| Core
     Core -.-|テキスト+ベクトル保存| VDB
 ```
